@@ -1,0 +1,71 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: emojify-web-configmap
+data:
+  config: |
+    window.env = {};
+    window.env.config = {
+      AUTH_URL: '{{ .Values.auth_uri }}',
+      API_URL: '{{ .Values.api_uri }}/',
+      HOME_URL: '{{ .Values.home_uri }}',
+      PAYMENT_URL: '{{ .Values.api_uri }}/payments',
+      PAYMENT_ENABLED: true,
+      OAUTH_ENABLED: true,
+      AUTH_DISABLED: false
+    };
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: emojify-website
+  labels:
+    app: emojify-website
+spec:
+  ports:
+  - port: 5000
+    targetPort: 5000
+    protocol: TCP
+    name: http
+  selector:
+    app: emojify-website
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emojify-website
+  labels:
+    app: emojify-website
+spec:
+  replicas: {{.Values.website_replicas}}
+  selector:
+    matchLabels:
+      app: emojify-website
+  template:
+    metadata:
+      labels:
+        app: emojify-website
+    spec:
+      volumes:
+      - name: config
+        configMap:
+          name: emojify-web-configmap
+          items:
+          - key: config
+            path: env.js
+      containers:
+      - name: emojify-website
+        image: "nicholasjackson/emojify-website:latest"
+        imagePullPolicy: Always
+        command: ["serve"]
+        args: ["-s", "build"]
+        ports:
+        - containerPort: 5000
+
+        volumeMounts:
+        - name: config
+          mountPath: /app/build/config/
+          readOnly: true

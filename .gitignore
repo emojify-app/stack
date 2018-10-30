@@ -7,3 +7,8 @@
 
 # .tfvars files
 *.tfvars
+
+kube_config.yml
+*.pem
+.envrc
+.pid*

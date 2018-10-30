@@ -1,0 +1,172 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: emojify-auth
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: emojify-auth-configmap
+data:
+  auto-auth: |
+    "auto_auth" {
+      method "kubernetes" {
+        config {
+          role = "emojify-auth"
+        }
+      }
+
+      sink "file" {
+        config {
+          path = "/var/run/secrets/vault-token/token.txt"
+        }
+      }
+    }
+
+  consultemplate-config: |
+    template {
+      source = "/etc/config/secrets.tmpl"
+      destination = "/var/run/secrets/vault/.env"
+
+      left_delimiter  = "(("
+      right_delimiter = "))"
+    }
+
+    vault {
+      # This is the address of the Vault leader. The protocol (http(s)) portion
+      # of the address is required.
+      address = "http://vault.service.consul:8200"
+    }
+
+  consultemplate-template: |
+    DATABASE_URL=postgres://(( with secret "database/creds/db-role" ))(( .Data.username ))@emojify-db:(( .Data.password ))(( end ))@(( with secret "secret/data/emojify-auth" ))(( .Data.data.db_server ))(( end )):5432/keratin
+
+    (( with secret "secret/data/emojify-auth" ))
+    REDIS_URL=redis://user:(( .Data.data.redis_key ))@(( .Data.data.redis_server )):6379/0
+    GITHUB_OAUTH_CREDENTIALS=(( .Data.data.github_auth_client_id )):(( .Data.data.github_auth_client_secret ))
+    SECRET_KEY_BASE=(( .Data.data.keratin_key_base ))
+    HTTP_AUTH_USERNAME=(( .Data.data.keratin_auth_username ))
+    HTTP_AUTH_PASSWORD=(( .Data.data.keratin_auth_password ))(( end ))
+    AUTHN_URL={{ .Values.auth_uri }}
+    APP_DOMAINS={{ .Values.domain }}
+    PROXY=true
+    ForceSSL=true
+
+  keratin-startup: |
+    #!/bin/sh -e
+    if [[ ! -f /var/run/secrets/vault/.env ]] ; then
+      echo 'Secrets do not exist at expected path, exiting...'
+      exit 1
+    fi
+    # Load the vault secrets as environment variables
+    export $(cat /var/run/secrets/vault/.env | xargs)
+    # Setup the database
+    /app/authn migrate
+    # Start the server
+    /app/authn server
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: emojify-auth
+  labels:
+    app: emojify-auth
+spec:
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  selector:
+    app: emojify-auth
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emojify-auth
+  labels:
+    app: emojify-auth
+spec:
+  replicas: {{.Values.auth_replicas}}
+  selector:
+    matchLabels:
+      app: emojify-auth
+  template:
+    metadata:
+      labels:
+        app: emojify-auth
+      annotations:
+        "consul.hashicorp.com/connect-inject": "true"
+        "consul.hashicorp.com/connect-service-port": "3001"
+    spec:
+      serviceAccountName: emojify-auth
+      automountServiceAccountToken: true
+      volumes:
+      - name: config
+        configMap:
+          name: emojify-auth-configmap
+          items:
+          - key: auto-auth
+            path: auto-auth.hcl
+          - key: consultemplate-config
+            path: consultemplate.hcl
+          - key: consultemplate-template
+            path: secrets.tmpl
+      - name: keratin-startup
+        configMap:
+          name: emojify-auth-configmap
+          items:
+          - key: keratin-startup
+            path: startup.sh
+      - name: secrets
+        emptyDir: {}
+      - name: vault-token
+        emptyDir: {}
+
+      containers:
+      - name: emojify-auth
+        image: "nicholasjackson/authn-server:latest"
+        imagePullPolicy: Always
+        command: ["/bin/sh"]
+        args: ["/scripts/startup.sh"]
+        ports:
+        - containerPort: 3000
+        volumeMounts:
+        - name: secrets
+          mountPath: /var/run/secrets/vault
+          readOnly: true
+        - name: keratin-startup
+          mountPath: /scripts
+          readOnly: false
+
+      - name: vault-auth
+        image: "vault:{{ .Values.vault_version }}"
+        imagePullPolicy: IfNotPresent
+        command: ["vault"]
+        args: ["agent", "-address", "http://vault.service.consul:8200", "-config", "/etc/config/auto-auth.hcl"]
+        volumeMounts:
+        - name: config
+          mountPath: /etc/config
+          readOnly: true
+        - name: vault-token
+          mountPath: /var/run/secrets/vault-token
+
+      - name: consul-template
+        image: "hashicorp/consul-template:alpine"
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/sh"]
+        args: ["-c", "VAULT_TOKEN=$(cat /var/run/secrets/vault-token/token.txt) /bin/consul-template -config /etc/config/consultemplate.hcl"]
+        volumeMounts:
+        - name: secrets
+          mountPath: /var/run/secrets/vault
+          readOnly: false
+        - name: vault-token
+          mountPath: /var/run/secrets/vault-token
+          readOnly: true
+        - name: config
+          mountPath: /etc/config
+          readOnly: true
