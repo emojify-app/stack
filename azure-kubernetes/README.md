@@ -65,17 +65,6 @@ The example project runs on Kubernetes, currently the example Terraform will cre
 make install_helm_provider
 ```
 
-### Install the helm client
-
-```bash
-brew install helm
-```
-
-### Init helm client
-```
-helm init -client
-```
-
 ### Configure environment variables
 You will need to set the following environment variables which correspond to your account in azure
 
