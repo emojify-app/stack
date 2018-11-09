@@ -38,15 +38,6 @@ data "azurerm_image" "payment" {
   resource_group_name = "${var.images_resource_group}"
 }
 
-/*
-resource "azurerm_image" "test" {
-  name                      = "acctest"
-  location                  = "West US"
-  resource_group_name       = "${data.terraform_remote_state.core.resource_group_name}"
-  source_virtual_machine_id = "${azure_image.payment.id}"
-}
-*/
-
 resource "azurerm_virtual_machine" "payment" {
   name                  = "payment-vm"
   resource_group_name   = "${data.terraform_remote_state.core.resource_group_name}"
