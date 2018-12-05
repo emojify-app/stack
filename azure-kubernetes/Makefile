@@ -1,3 +1,15 @@
+UNAME := $(shell uname)
+
+
+ifeq ($(UNAME),Darwin) #Mac OS
+	OPEN = "open"
+    echo "Darwin"
+endif
+
+ifeq ($(UNAME),Linux) #Linux based systems
+	OPEN = "xdg-open"
+endif
+
 update_consul_helm_chart:
 	wget https://github.com/hashicorp/consul-helm/archive/v0.3.0.zip
 	unzip v0.3.0.zip
@@ -51,10 +63,11 @@ destroy_emojify:
 
 # Open the Kubernetes dashboard, runs kubectl proxy in the background
 open_dashboard: get_k8s_config
-	@KUBECONFIG=$(shell pwd)/kube_config.yml kubectl proxy & echo $$! > .pid_kube_proxy
+	@KUBECONFIG=$(shell pwd)/kube_config.yml kubectl proxy --address="0.0.0.0" --accept-hosts="^*$$" & echo $$! > .pid_kube_proxy
 	sleep 3
 	@echo "Opening dashboard, To quit, press Ctrl-C"
-	@open "http://localhost:8001/api/v1/namespaces/kube-system/services/http:kubernetes-dashboard:/proxy/#!/overview?namespace=default"
+
+	@$(shell $(OPEN) "http://localhost:8001/api/v1/namespaces/kube-system/services/http:kubernetes-dashboard:/proxy/#!/overview?namespace=default")
 	@bash -c "trap 'pkill -F .pid_kube_proxy' SIGINT SIGTERM ERR EXIT; sleep 20000"
 
 # Open the Consul UI, runs kubectl port forward in the background
@@ -62,13 +75,13 @@ open_consul_ui: get_k8s_config
 	@KUBECONFIG=$(shell pwd)/kube_config.yml kubectl port-forward svc/consul-ui 8502:80 & echo $$! > .pid_kube_ports
 	@echo "Opening Consul UI, To quit, press Ctrl-C"
 	@sleep 3
-	@open "http://localhost:8502/ui"
+	@$(shell $(OPEN) "http://localhost:8502/ui")
 	@bash -c "trap 'pkill -F .pid_kube_ports' SIGINT SIGTERM ERR EXIT; sleep 20000"
 
 open_vault_ui: tunnel_vault_start
 	@echo "Opening Vault UI, To quit, press Ctrl-C"
 	@sleep 3
-	@open "http://localhost:8202/ui"
+	@$(shell $(OPEN) "http://localhost:8202/ui")
 	@bash -c "trap 'ssh -S vault-ctrl-socket -O exit ubuntu@$(shell cd core && terraform output vault)' SIGINT SIGTERM ERR EXIT; sleep 20000"
 
 # Open the application in your browser

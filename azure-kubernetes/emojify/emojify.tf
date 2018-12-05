@@ -58,7 +58,7 @@ resource "helm_release" "emojify" {
 
   set {
     name  = "version"
-    value = "0.1.66"
+    value = "0.1.68"
   }
 
   set {
