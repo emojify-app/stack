@@ -15,6 +15,11 @@ variable "cloudflare_zone_id" {
   description = "Cloudflare zone id"
 }
 
+variable "authserver_enabled" {
+  description = "Enable the auth server"
+  default     = false
+}
+
 variable "github_auth_client_id" {
   description = "GitHub client id for GitHub oAuth"
 }

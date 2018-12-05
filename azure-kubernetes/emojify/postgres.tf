@@ -1,4 +1,6 @@
 resource "azurerm_postgresql_server" "emojify_db" {
+  count = "${var.authserver_enabled == true ? 1 : 0}"
+
   name                = "emojify-db"
   resource_group_name = "${data.terraform_remote_state.core.resource_group_name}"
   location            = "${data.terraform_remote_state.core.location}"
@@ -23,6 +25,8 @@ resource "azurerm_postgresql_server" "emojify_db" {
 }
 
 resource "azurerm_postgresql_database" "emojify_db" {
+  count = "${var.authserver_enabled == true ? 1 : 0}"
+
   name                = "keratin"
   resource_group_name = "${data.terraform_remote_state.core.resource_group_name}"
   server_name         = "${azurerm_postgresql_server.emojify_db.name}"
@@ -33,6 +37,8 @@ resource "azurerm_postgresql_database" "emojify_db" {
 
 # Allow internal ingress
 resource "azurerm_postgresql_firewall_rule" "emojify_db" {
+  count = "${var.authserver_enabled == true ? 1 : 0}"
+
   name                = "azure"
   resource_group_name = "${data.terraform_remote_state.core.resource_group_name}"
   server_name         = "${azurerm_postgresql_server.emojify_db.name}"

@@ -89,6 +89,9 @@ export CLOUDFLARE_TOKEN=xxxxxxxx
 export TF_VAR_cloudflare_domain=domain_zone_maps_to.com
 export TF_VAR_cloudflare_zone_id="yourzone_id"
 
+# Optionally enable OAuth sever
+export TF_VAR_authserver_enabled=true
+
 # Optionally enable Github Auth, see GitHub auth section for help
 export TF_VAR_github_auth_enabled=true
 export TF_VAR_github_auth_client_id=xxxxxxxx

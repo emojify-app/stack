@@ -72,6 +72,11 @@ resource "helm_release" "emojify" {
   }
 
   set {
+    name  = "auth_enabled"
+    value = "${var.authserver_enabled}"
+  }
+
+  set {
     name  = "auth_uri"
     value = "https://${local.domain}/auth"
   }

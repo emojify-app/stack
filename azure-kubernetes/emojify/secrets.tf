@@ -4,12 +4,13 @@ data "template_file" "provision_secrets" {
   template = "${file("${path.module}/scripts/provision_secrets.sh")}"
 
   vars {
-    redis_key                 = "${azurerm_redis_cache.emojify_cache.primary_access_key}"
-    redis_server              = "${azurerm_redis_cache.emojify_cache.hostname}"
-    db_server                 = "${azurerm_postgresql_server.emojify_db.fqdn}"
+    auth_enabled              = "${var.authserver_enabled}"
+    redis_key                 = "${var.authserver_enabled == true ? azurerm_redis_cache.emojify_cache.primary_access_key : "nil"}"
+    redis_server              = "${var.authserver_enabled == true ? azurerm_redis_cache.emojify_cache.hostname : "nil"}"
+    db_server                 = "${var.authserver_enabled == true ? azurerm_postgresql_server.emojify_db.fqdn : "nil"}"
     db_database               = "keratin"
-    db_username               = "${azurerm_postgresql_server.emojify_db.administrator_login}"
-    db_password               = "${azurerm_postgresql_server.emojify_db.administrator_login_password}"
+    db_username               = "${var.authserver_enabled == true ? azurerm_postgresql_server.emojify_db.administrator_login : "nil"}"
+    db_password               = "${var.authserver_enabled == true ? azurerm_postgresql_server.emojify_db.administrator_login_password : "nil"}"
     github_auth_client_id     = "${var.github_auth_client_id}"
     github_auth_client_secret = "${var.github_auth_client_secret}"
   }

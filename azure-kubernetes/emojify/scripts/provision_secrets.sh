@@ -2,27 +2,28 @@
 export VAULT_ADDR=http://vault.service.consul:8200
 export VAULT_TOKEN=$(cat /home/ubuntu/.vault_token)
 
-# Enable database backend for postgres
-vault secrets enable database
-
-## Setup the plugin
-vault write database/config/my-database \
-    plugin_name="postgresql-database-plugin" \
-    allowed_roles="db-role" \
-    connection_url="postgresql://{{username}}:{{password}}@${db_server}:5432/${db_database}" \
-    username="${db_username}@emojify-db" \
-    password="${db_password}"
-
-## Confgiure the role
-vault write database/roles/db-role \
-    db_name=my-database \
-    creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; \
-        GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO \"{{name}}\"; \
-        GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO \"{{name}}\"; \
-        GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO \"{{name}}\";" \
-    default_ttl="1h" \
-    max_ttl="24h"
-
+if [[ "${auth_enabled}" == "true" ]]; then
+  # Enable database backend for postgres
+  vault secrets enable database
+  
+  ## Setup the plugin
+  vault write database/config/my-database \
+      plugin_name="postgresql-database-plugin" \
+      allowed_roles="db-role" \
+      connection_url="postgresql://{{username}}:{{password}}@${db_server}:5432/${db_database}" \
+      username="${db_username}@emojify-db" \
+      password="${db_password}"
+  
+  ## Confgiure the role
+  vault write database/roles/db-role \
+      db_name=my-database \
+      creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; \
+          GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO \"{{name}}\"; \
+          GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO \"{{name}}\"; \
+          GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO \"{{name}}\";" \
+      default_ttl="1h" \
+      max_ttl="24h"
+fi
 
 # Create a K8s role allowing access from our auth pod
 vault write auth/kubernetes/role/emojify-auth \
