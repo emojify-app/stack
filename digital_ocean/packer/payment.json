@@ -1,0 +1,21 @@
+{
+  "variables": {
+    "region": "{{env `DIGITALOCEAN_REGION`}}"
+  },
+  "builders":[
+    {
+      "type": "digitalocean",
+      "image": "ubuntu-18-04-x64",
+      "region": "{{user `region`}}",
+      "size": "512mb",
+      "ssh_username": "root",
+      "snapshot_name": "emojify-payment"
+    }
+  ],
+  "provisioners":[
+    {
+      "type": "shell",
+      "script": "./scripts/provision_payment.sh"
+    }
+  ]
+}

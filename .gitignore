@@ -12,3 +12,4 @@ kube_config.yml
 *.pem
 .envrc
 .pid*
+secret.yml
