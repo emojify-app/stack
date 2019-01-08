@@ -18,6 +18,8 @@ data "template_file" "provision_secrets" {
 }
 
 resource "null_resource" "provision_secrets" {
+  count = "${var.authserver_enabled == true ? 1 : 0}"
+
   triggers {
     private_key_id = "${data.terraform_remote_state.core.jumpbox_key}"
     firewall_rules = "${element(concat(azurerm_postgresql_firewall_rule.emojify_db.*.id, list("")),0)}"

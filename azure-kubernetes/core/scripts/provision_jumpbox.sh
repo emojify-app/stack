@@ -26,18 +26,18 @@ EOF
 chown -R ubuntu /home/ubuntu
 
 # Enable KubeDNS for Consul
-cat <<EOF | KUBECONFIG=/home/ubuntu/.kube/config kubectl apply -f -
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  labels:
-    addonmanager.kubernetes.io/mode: EnsureExists
-  name: kube-dns
-  namespace: kube-system
-data:
-  stubDomains: |
-    {"consul": ["$(KUBECONFIG=/home/ubuntu/.kube/config kubectl get svc consul-dns -o jsonpath='{.spec.clusterIP}')"]}
-EOF
+# cat <<EOF | KUBECONFIG=/home/ubuntu/.kube/config kubectl apply -f -
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   labels:
+#     addonmanager.kubernetes.io/mode: EnsureExists
+#   name: kube-dns
+#   namespace: kube-system
+# data:
+#   stubDomains: |
+#     {"consul": ["$(KUBECONFIG=/home/ubuntu/.kube/config kubectl get svc consul-dns -o jsonpath='{.spec.clusterIP}')"]}
+# EOF
 
 # Enable Certmanager
 cat <<EOF | KUBECONFIG=/home/ubuntu/.kube/config kubectl apply -f -

@@ -45,7 +45,7 @@ services:
     depends_on:
       - consul
 
-  emojify-website:
+  emojify-website-1:
     image: nicholasjackson/emojify-website:0.5.8
     ports:
       - "5000:5000"
@@ -57,17 +57,48 @@ services:
     volumes:
       - ./docker-compose.env.js:/app/build/config/env.js
 
-  emojify-website-proxy:
+  emojify-website-proxy-1:
     image: consul:latest
     entrypoint: "consul"
-    network_mode: "service:emojify-website"
+    network_mode: "service:emojify-website-1"
     command: [
       'connect',
       'proxy',
       '-log-level=DEBUG',
       '-service', 'emojify-website',
       '-http-addr', 'consul:8500',
-      '-listen', 'emojify-website:8443',
+      '-listen', 'emojify-website-1:8443',
+      '-service-addr', 'localhost:5000',
+      '-register'
+    ]
+    environment:
+      - SERVICE_IGNORE=true
+    depends_on:
+      - consul
+  
+  emojify-website-2:
+    image: nicholasjackson/emojify-website:0.5.8
+    ports:
+      - "5001:5000"
+    environment:
+      - SERVICE_NAME=emojify-website
+      - SERVICE_5000_CHECK_HTTP=/
+      - SERVICE_5000_CHECK_INTERVAL=15s
+      - SERVICE_5000_CHECK_TIMEOUTL=1s
+    volumes:
+      - ./docker-compose.env.js:/app/build/config/env.js
+
+  emojify-website-proxy-1:
+    image: consul:latest
+    entrypoint: "consul"
+    network_mode: "service:emojify-website-2"
+    command: [
+      'connect',
+      'proxy',
+      '-log-level=DEBUG',
+      '-service', 'emojify-website',
+      '-http-addr', 'consul:8500',
+      '-listen', 'emojify-website-2:8443',
       '-service-addr', 'localhost:5000',
       '-register'
     ]

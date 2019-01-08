@@ -39,3 +39,8 @@ variable "letsencrypt_email" {
 }
 
 variable "images_resource_group" {}
+
+variable "consul_enabled" {
+  description = "Install consul on Kubernetes"
+  default     = true
+}

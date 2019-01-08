@@ -15,17 +15,22 @@ variable "cloudflare_zone_id" {
   description = "Cloudflare zone id"
 }
 
-variable "authserver_enabled" {
-  description = "Enable the auth server"
-  default     = false
-}
-
 variable "github_auth_client_id" {
   description = "GitHub client id for GitHub oAuth"
 }
 
 variable "github_auth_client_secret" {
   description = "GitHub client secret for GitHub oAuth"
+}
+
+variable "application_enabled" {
+  description = "Enable automatic deploy of the emojify application to Kubernetes"
+  default     = true
+}
+
+variable "authserver_enabled" {
+  description = "Enable the auth server"
+  default     = true
 }
 
 variable "images_resource_group" {}

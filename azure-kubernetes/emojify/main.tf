@@ -1,20 +1,3 @@
-/*
-# TFE Remote state
-terraform {
-  backend "atlas" {
-    name = "niccorp/emojify-app"
-  }
-}
-
-data "terraform_remote_state" "core" {
-  backend = "atlas"
-
-  config {
-    name = "niccorp/emojify-core"
-  }
-}
-*/
-
 terraform {
   backend "azurerm" {
     key = "emojify.app.terraform.tfstate"
@@ -49,6 +32,7 @@ locals {
 
 # Start our application
 resource "helm_release" "emojify" {
+  count      = "${var.application_enabled == true ? 1 : 0}"
   depends_on = ["null_resource.provision_secrets"]
 
   name    = "emojify"

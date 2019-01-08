@@ -114,7 +114,7 @@ resource "null_resource" "provision_jumpbox" {
     vault_id       = "${azurerm_virtual_machine.vault.id}"
     jumpbox_id     = "${azurerm_virtual_machine.jumpbox.id}"
     private_key_id = "${tls_private_key.jumpbox.id}"
-    consul         = "${helm_release.consul.id}"
+    consul         = "${element(concat(helm_release.consul.*.id, list("")),0)}"
   }
 
   connection {
