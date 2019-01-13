@@ -1,0 +1,34 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emojify-facebox
+  labels:
+    app: emojify-facebox
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: emojify-facebox
+  template:
+    metadata:
+      labels:
+        app: emojify-facebox
+      annotations:
+        "consul.hashicorp.com/connect-inject": "true"
+        "consul.hashicorp.com/service-name": "emojify-facebox"
+        "consul.hashicorp.com/connect-service-port": "8080"
+    spec:
+      containers:
+      - name: emojify-facebox
+        image: "machinebox/facebox"
+        env:
+        - name: MB_KEY
+          valueFrom:
+            secretKeyRef:
+              name: emojify
+              key: mb_key
+        - name: MB_ADDRESS
+          value: "127.0.0.1"
+        - name: MB_PORT
+          value: "8080"

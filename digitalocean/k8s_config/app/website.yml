@@ -11,26 +11,10 @@ data:
       API_URL: '/api/',
       HOME_URL: '/',
       PAYMENT_URL: '/api/payments',
-      PAYMENT_ENABLED: true,
+      PAYMENT_ENABLED: false,
       OAUTH_ENABLED: false,
       AUTH_DISABLED: true
     };
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: emojify-website
-  labels:
-    app: emojify-website
-spec:
-  ports:
-  - port: 5000
-    targetPort: 5000
-    protocol: TCP
-    name: http
-  selector:
-    app: emojify-website
 
 ---
 apiVersion: apps/v1
