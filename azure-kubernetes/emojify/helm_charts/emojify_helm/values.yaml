@@ -8,6 +8,7 @@ ingress_fqdn: ""
 version: ""
 vault_version: "0.11.1"
 scheme: "https"
+auth_enabled: true
 auth_replicas: 1
 api_replicas: 1
 router_replicas: 1

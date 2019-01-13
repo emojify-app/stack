@@ -1,5 +1,7 @@
 # Run consul on kubernetes
 resource "helm_release" "consul" {
+  count = "${var.consul_enabled == true ? 1 : 0}"
+
   name    = "consul"
   chart   = "${path.module}/helm_charts/consul-helm"
   timeout = 1000

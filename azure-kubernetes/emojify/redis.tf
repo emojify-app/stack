@@ -1,4 +1,6 @@
 resource "azurerm_redis_cache" "emojify_cache" {
+  count = "${var.authserver_enabled == true ? 1 : 0}"
+
   name                = "emojify-redis"
   resource_group_name = "${data.terraform_remote_state.core.resource_group_name}"
   location            = "${data.terraform_remote_state.core.location}"

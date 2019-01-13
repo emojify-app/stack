@@ -4,21 +4,25 @@ data "template_file" "provision_secrets" {
   template = "${file("${path.module}/scripts/provision_secrets.sh")}"
 
   vars {
-    redis_key                 = "${azurerm_redis_cache.emojify_cache.primary_access_key}"
-    redis_server              = "${azurerm_redis_cache.emojify_cache.hostname}"
-    db_server                 = "${azurerm_postgresql_server.emojify_db.fqdn}"
-    db_database               = "keratin"
-    db_username               = "${azurerm_postgresql_server.emojify_db.administrator_login}"
-    db_password               = "${azurerm_postgresql_server.emojify_db.administrator_login_password}"
+    auth_enabled = "${var.authserver_enabled}"
+    redis_key    = "${element(concat(azurerm_redis_cache.emojify_cache.*.primary_access_key, list("")),0)}"
+    redis_server = "${element(concat(azurerm_redis_cache.emojify_cache.*.hostname, list("")),0)}"
+
+    db_server                 = "${element(concat(azurerm_postgresql_server.emojify_db.*.fqdn, list("")),0)}"
+    db_database               = "${element(concat(azurerm_postgresql_server.emojify_db.*.name, list("")),0)}"
+    db_username               = "${element(concat(azurerm_postgresql_server.emojify_db.*.administrator_login, list("")),0)}"
+    db_password               = "${element(concat(azurerm_postgresql_server.emojify_db.*.administrator_login_password, list("")),0)}"
     github_auth_client_id     = "${var.github_auth_client_id}"
     github_auth_client_secret = "${var.github_auth_client_secret}"
   }
 }
 
 resource "null_resource" "provision_secrets" {
+  count = "${var.authserver_enabled == true ? 1 : 0}"
+
   triggers {
     private_key_id = "${data.terraform_remote_state.core.jumpbox_key}"
-    firewall_rules = "${azurerm_postgresql_firewall_rule.emojify_db.id}"
+    firewall_rules = "${element(concat(azurerm_postgresql_firewall_rule.emojify_db.*.id, list("")),0)}"
   }
 
   connection {

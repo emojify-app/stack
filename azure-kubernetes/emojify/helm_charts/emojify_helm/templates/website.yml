@@ -13,7 +13,7 @@ data:
       PAYMENT_URL: '{{ .Values.api_uri }}/payments',
       PAYMENT_ENABLED: true,
       OAUTH_ENABLED: true,
-      AUTH_DISABLED: false
+      AUTH_ENABLED: {{ .Values.auth_enabled }}
     };
 
 ---
@@ -58,7 +58,7 @@ spec:
             path: env.js
       containers:
       - name: emojify-website
-        image: "nicholasjackson/emojify-website:latest"
+        image: "nicholasjackson/emojify-website:0.5.8"
         imagePullPolicy: Always
         command: ["serve"]
         args: ["-s", "build"]

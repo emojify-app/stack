@@ -1,3 +1,4 @@
+{{ if eq .Values.auth_enabled "true" }}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -170,3 +171,4 @@ spec:
         - name: config
           mountPath: /etc/config
           readOnly: true
+{{ end }}

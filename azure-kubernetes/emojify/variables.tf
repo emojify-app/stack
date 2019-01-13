@@ -23,6 +23,16 @@ variable "github_auth_client_secret" {
   description = "GitHub client secret for GitHub oAuth"
 }
 
+variable "application_enabled" {
+  description = "Enable automatic deploy of the emojify application to Kubernetes"
+  default     = true
+}
+
+variable "authserver_enabled" {
+  description = "Enable the auth server"
+  default     = true
+}
+
 variable "images_resource_group" {}
 
 variable "remote_state_resource_group_name" {}

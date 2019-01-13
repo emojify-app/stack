@@ -1,0 +1,69 @@
+#!/bin/bash
+UNAME=$(uname)
+
+# set specific commands for Linux and MacOS
+if [[ "$UNAME" == "Linux" ]]; then
+  OPEN=xdg-open
+  CLIP="| xclip -selection cls"
+else
+  OPEN=open
+  CLIP="| pbcopy"
+fi
+
+function get_k8s_config {
+  terraform output kube_config > kube_config.yml
+  export KUBECONFIG=$(pwd)/kube_config.yml
+}
+
+function get_service_token {
+  kubectl get secret `kubectl get serviceaccount my-dashboard-sa -o jsonpath="{.secrets[0].name}"` -o jsonpath="{.data.token}" | base64 --decode > .service_token
+
+  echo " "
+  echo "Service Token to access dashboard:"
+  cat .service_token
+  eval cat .service_token $CLIP
+  echo " "
+}
+
+function open_service {
+  kubectl port-forward --namespace=$5 --address 0.0.0.0 svc/$3 $1:$2 & echo $! > .pid_$3
+
+  echo " "
+	echo "Opening $3, To quit, press Ctrl-C"
+	sleep 5
+  eval $OPEN "$4://localhost:$1"
+	trap "pkill -F .pid_$3" SIGINT SIGTERM ERR EXIT; sleep 20000
+  echo " "
+}
+
+case "$1" in
+  open_dashboard)
+    get_k8s_config
+    get_service_token
+    open_service 8443 443 kubernetes-dashboard https kube-system
+    ;;
+  open_consul_ui)
+    get_k8s_config
+    open_service 8180 80 consul-ui http default
+    ;;
+  open_prometheus)
+    get_k8s_config
+    open_service 9090 9090 prometheus http default
+    ;;
+  open_grafana)
+    get_k8s_config
+    open_service 3000 3000 grafana http default
+    ;;
+  get_k8s_config)
+    echo Fetching Kubernetes configuration
+    get_k8s_config
+    ;;
+  *)
+    echo "Usage:"
+    echo "open_dashboard  - Open the Kubernetes dashboard"
+    echo "open_consul_ui  - Open the Consul UI"
+    echo "open_prometheus - Open the Prometheus UI"
+    echo "open_grafana    - Open the Grafana UI"
+    echo "get_k8s_config  - Fetch Kubernetes config from the remote state"
+    exit 1
+esac
