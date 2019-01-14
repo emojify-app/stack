@@ -22,10 +22,14 @@ spec:
       containers:
       - name: prometheus-statsd
         image: prom/statsd-exporter:latest
+        args: [
+          "--log.level=debug"
+        ]
         ports:
           - name: statsd
             containerPort: 9125
-            hostPort: 8125
+            hostPort: 9125
+            protocol: UDP
           - name: metrics
             containerPort: 9102
             hostPort: 9102
