@@ -63,6 +63,10 @@ spec:
       labels:
         app: prometheus-server
     spec:
+      securityContext:
+        fsGroup: 2000
+        runAsUser: 1000
+        runAsNonRoot: true
       volumes:
         - name: prometheus-config-volume
           configMap:
@@ -86,7 +90,7 @@ spec:
     - metadata:
         name: prometheus-storage-volume
       spec:
-        accessModes: [ "ReadWriteOnce" ]
+        accessModes: [ "ReadWriteMany" ]
         resources:
           requests:
             storage: 3Gi
