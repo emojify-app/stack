@@ -84,15 +84,3 @@ resource "helm_release" "dashboard" {
     value = "kubernetes-dashboard"
   }
 }
-
-resource "helm_release" "heapster" {
-  name      = "heapster"
-  chart     = "${path.module}/helm-charts/heapster"
-  timeout   = 300
-  namespace = "kube-system"
-
-  set {
-    name  = "version"
-    value = "0.5"
-  }
-}

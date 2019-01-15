@@ -59,6 +59,7 @@ data:
 
       - job_name: 'kubernetes-cadvisor'
         scheme: https
+        metrics_path: /metrics/cadvisor
         bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
         tls_config:
           insecure_skip_verify: true

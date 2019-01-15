@@ -61,7 +61,7 @@ spec:
     spec:
       containers:
         - name: prometheus
-          image: gcr.io/erik-playground/prometheus:nic
+          image: prom/prometheus:v2.6.0
           args:
             - "--config.file=/etc/prometheus/prometheus.yml"
             - "--storage.tsdb.path=/prometheus/"
