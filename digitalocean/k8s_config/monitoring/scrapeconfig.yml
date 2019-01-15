@@ -35,7 +35,7 @@ data:
     scrape_configs:
       - job_name: 'kubernetes-pods'
         kubernetes_sd_configs:
-        - role: pod
+          - role: pod
         relabel_configs:
           # Only scrape pods which have a port labeled metrics and 
           # the scrape annotation
@@ -46,8 +46,32 @@ data:
             action: keep
             regex: "metrics"
 
+      - job_name: 'kubernetes-nodes'
+        scheme: https
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        tls_config:
+          insecure_skip_verify: true
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - action: labelmap
+            regex: __meta_kubernetes_node_label_(.+)
+
+      - job_name: 'kubernetes-cadvisor'
+        scheme: https
+        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+        tls_config:
+          insecure_skip_verify: true
+        kubernetes_sd_configs:
+          - role: node
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_node_address_InternalIP]
+            target_label: __address__
+            regex: (.*)
+            replacement: $1:10250
+
 ---
-# Additional scraping for K8s
+# Adeitional scraping for K8s
 #      - job_name: 'kubernetes-apiservers'
 #        scheme: https
 #        bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
