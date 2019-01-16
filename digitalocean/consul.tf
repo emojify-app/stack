@@ -17,7 +17,7 @@ resource "helm_release" "consul" {
 
   set {
     name  = "syncCatalog.enabled"
-    value = true
+    value = false
   }
 
   set {
