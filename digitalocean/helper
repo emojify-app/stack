@@ -37,20 +37,20 @@ function open_service {
 }
 
 case "$1" in
-  open_dashboard)
+  dashboard)
     get_k8s_config
     get_service_token
     open_service 8443 443 kubernetes-dashboard https kube-system
     ;;
-  open_consul_ui)
+  consul)
     get_k8s_config
     open_service 8180 80 consul-ui http default
     ;;
-  open_prometheus)
+  prometheus)
     get_k8s_config
     open_service 9090 9090 prometheus http default
     ;;
-  open_grafana)
+  grafana)
     get_k8s_config
     open_service 3000 3000 grafana http default
     ;;
@@ -60,10 +60,10 @@ case "$1" in
     ;;
   *)
     echo "Usage:"
-    echo "open_dashboard  - Open the Kubernetes dashboard"
-    echo "open_consul_ui  - Open the Consul UI"
-    echo "open_prometheus - Open the Prometheus UI"
-    echo "open_grafana    - Open the Grafana UI"
+    echo "dashboard  - Open the Kubernetes dashboard"
+    echo "consul     - Open the Consul UI"
+    echo "prometheus - Open the Prometheus UI"
+    echo "grafana    - Open the Grafana UI"
     echo "get_k8s_config  - Fetch Kubernetes config from the remote state"
     exit 1
 esac

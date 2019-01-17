@@ -7,7 +7,7 @@ resource "helm_release" "consul" {
 
   set {
     name  = "version"
-    value = "0.5.0"
+    value = "0.6.0"
   }
 
   set {
@@ -17,6 +17,11 @@ resource "helm_release" "consul" {
 
   set {
     name  = "syncCatalog.enabled"
+    value = true
+  }
+
+  set {
+    name  = "syncCatalog.toK8S"
     value = false
   }
 

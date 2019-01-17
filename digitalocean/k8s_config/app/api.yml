@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: emojify-api
-        image: "nicholasjackson/emojify-api:v0.6.0"
+        image: "nicholasjackson/emojify-api:v0.6.1"
         imagePullPolicy: Always
         command: ["/service/emojify-api"]
         args: [
@@ -29,7 +29,8 @@ spec:
           "-authn-disable=true",
           "-bind-address=0.0.0.0:9090",
           "-statsd-server=$(HOST_IP):9125",
-          "-path=/"
+          "-path=/",
+          "-log_format=json",
         ]
         ports:
         - containerPort: 9090

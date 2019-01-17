@@ -21,11 +21,14 @@ spec:
         app: grafana
     spec:
       containers:
-        - image: grafana/grafana
+        - image: grafana/grafana:master
           name: grafana
           ports:
             - containerPort: 3000
               protocol: TCP
+          env:
+            - name: GF_EXPLORE_ENABLED
+              value: "true"
           resources:
             limits:
               cpu: 500m

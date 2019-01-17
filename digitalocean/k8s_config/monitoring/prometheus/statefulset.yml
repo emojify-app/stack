@@ -90,7 +90,7 @@ spec:
     - metadata:
         name: prometheus-storage-volume
       spec:
-        accessModes: [ "ReadWriteMany" ]
+        accessModes: [ "ReadWriteOnce" ]
         resources:
           requests:
             storage: 3Gi
