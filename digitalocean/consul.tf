@@ -17,6 +17,11 @@ resource "helm_release" "consul" {
   }
 
   set {
+    name  = "global.imageK8S"
+    value = "nicholasjackson/consul-k8s:latest"
+  }
+
+  set {
     name  = "ui.enabled"
     value = true
   }
