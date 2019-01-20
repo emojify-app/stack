@@ -30,10 +30,16 @@ spec:
       labels:
         app: loki-server
     spec:
-      securityContext:
-        fsGroup: 2000
-        runAsUser: 1000
-        runAsNonRoot: true
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: name
+                operator: In
+                values:
+                - prometheus-statefulset-0
+            topologyKey: "kubernetes.io/hostname"
       volumes:
         - name: loki-config-volume
           configMap:
@@ -41,6 +47,13 @@ spec:
             name: loki-server-conf
       containers:
         - name: loki
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 3096Mi
+            requests:
+              cpu: 1000m
+              memory: 3096Mi
           image: grafana/loki:master
           args:
             - "--config.file=/etc/loki/loki.yaml"

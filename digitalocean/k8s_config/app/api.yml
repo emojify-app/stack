@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: emojify-api
-        image: "nicholasjackson/emojify-api:v0.6.1"
+        image: "nicholasjackson/emojify-api:v0.6.3"
         imagePullPolicy: Always
         command: ["/service/emojify-api"]
         args: [
@@ -45,11 +45,11 @@ spec:
           httpGet:
             path: /health
             port: 9090
-          initialDelaySeconds: 3
-          periodSeconds: 3
+          initialDelaySeconds: 10
+          periodSeconds: 30
         readinessProbe:
           httpGet:
             path: /health
             port: 9090
-          initialDelaySeconds: 3
-          periodSeconds: 3
+          initialDelaySeconds: 10
+          periodSeconds: 30

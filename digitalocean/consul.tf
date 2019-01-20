@@ -1,13 +1,19 @@
 resource "helm_release" "consul" {
   depends_on = ["kubernetes_cluster_role_binding.tiller"]
 
-  name    = "consul"
-  chart   = "${path.module}/helm-charts/consul-helm-0.5.0"
-  timeout = 300
+  name         = "consul"
+  chart        = "${path.module}/helm-charts/consul-helm-0.5.0"
+  timeout      = 300
+  force_update = true
 
   set {
     name  = "version"
-    value = "0.6.0"
+    value = "0.7.0"
+  }
+
+  set {
+    name  = "global.image"
+    value = "consul:1.4.0"
   }
 
   set {
@@ -17,11 +23,6 @@ resource "helm_release" "consul" {
 
   set {
     name  = "syncCatalog.enabled"
-    value = true
-  }
-
-  set {
-    name  = "syncCatalog.toK8S"
     value = false
   }
 

@@ -12,6 +12,8 @@ spec:
     metadata:
       labels:
         app: promtail
+      annotations:
+        "prometheus_io_scrape": "true"
     spec:
       serviceAccountName: promtail-serviceaccount
       containers:
@@ -35,7 +37,7 @@ spec:
                 fieldPath: spec.nodeName
           ports:
             - containerPort: 80
-              name: http-metrics
+              name: metrics
           securityContext:
             privileged: true
             runAsUser: 0

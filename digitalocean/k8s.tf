@@ -11,6 +11,17 @@ resource "digitalocean_kubernetes_cluster" "emojify" {
   }
 }
 
+/*
+resource "digitalocean_kubernetes_node_pool" "monitoring" {
+  cluster_id = "${digitalocean_kubernetes_cluster.emojify.id}"
+
+  name       = "monitoring-pool"
+  size       = "s-2vcpu-4gb"
+  node_count = 1
+  tags       = ["monitoring"]
+}
+*/
+
 // RBAC settings for HELM
 resource "kubernetes_service_account" "tiller" {
   metadata {

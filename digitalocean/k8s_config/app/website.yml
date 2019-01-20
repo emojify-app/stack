@@ -46,7 +46,7 @@ spec:
             path: env.js
       containers:
       - name: emojify-website
-        image: "nicholasjackson/emojify-website:0.5.8"
+        image: "nicholasjackson/emojify-website:v0.5.9"
         imagePullPolicy: Always
         command: ["serve"]
         args: ["-s", "build"]
