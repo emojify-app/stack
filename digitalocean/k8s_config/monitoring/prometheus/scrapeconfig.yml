@@ -45,6 +45,8 @@ data:
           - source_labels: [__meta_kubernetes_pod_container_port_name]
             action: keep
             regex: "metrics"
+          - action: labelmap
+            regex: __meta_kubernetes_pod_label_(.+)
 
       - job_name: 'kubernetes-nodes'
         scheme: https
@@ -70,6 +72,22 @@ data:
             target_label: __address__
             regex: (.*)
             replacement: $1:10250
+      
+      - job_name: 'consul'
+        metrics_path: /v1/agent/metrics
+        params:
+          format: ['prometheus']
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          # Only scrape pods which have a port labeled metrics and 
+          # the scrape annotation
+          - source_labels: [__meta_kubernetes_pod_label_app]
+            action: keep
+            regex: "consul"
+          - source_labels: [__meta_kubernetes_pod_container_port_name]
+            action: keep
+            regex: "http"
 
 ---
 # Adeitional scraping for K8s

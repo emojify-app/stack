@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: emojify-api
-        image: "nicholasjackson/emojify-api:v0.6.3"
+        image: "nicholasjackson/emojify-api:v0.6.4"
         imagePullPolicy: Always
         command: ["/service/emojify-api"]
         args: [

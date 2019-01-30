@@ -76,7 +76,7 @@ spec:
           - key: config
             path: nginx.conf
       containers:
-      - name: nginx
+      - name: emojify-ingress
         image: nginx:latest
         imagePullPolicy: IfNotPresent
         ports:
