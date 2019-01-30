@@ -74,7 +74,7 @@ data:
         name = "Proxy Public Listener"
         tcp = "${POD_IP}:20000"
         interval = "10s"
-        deregister_critical_service_after = "10m"
+        deregister_critical_service_after = "1m"
       }
     
       checks {
@@ -87,31 +87,31 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: emojify-website-manual
+  name: emojify-website
   labels:
-    app: emojify-website-manual
+    app: emojify-website
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: emojify-website-manual
+      app: emojify-website
   template:
     metadata:
       labels:
-        app: emojify-website-manual
+        app: emojify-website
       annotations:
         "prometheus_io_scrape": "true"
     spec:
       volumes:
       - name: config
         configMap:
-          name: emojify-web-manual-configmap
+          name: emojify-website-configmap
           items:
           - key: config
             path: env.js
       - name: envoy-init
         configMap:
-          name: emojify-web-manual-configmap
+          name: emojify-website-configmap
           items:
           - key: envoy-bootstrap
             path: envoy_bootstrap.yaml
@@ -150,13 +150,10 @@ spec:
           preStop:
             exec:
               command: [
-                "/consul-init/",
-                "consul",
-                "services",
-                "deregister",
-                "-http-addr=http://$(HOST_IP):8500",
-                "-id=$(POD_NAME)-emojify-website-proxy"
-                ]
+               "sh",
+               "-c",
+               "/consul-init/consul services deregister -http-addr=http://${HOST_IP}:8500 -id=${POD_NAME}-emojify-website-proxy"
+               ]
         env:
         - name: HOST_IP
           valueFrom:

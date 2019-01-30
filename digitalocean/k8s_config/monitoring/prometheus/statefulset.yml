@@ -47,6 +47,20 @@ spec:
     targetPort: 9090
 
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+spec:
+  ports:
+    - port: 3000
+      protocol: TCP
+      targetPort: 3000
+  selector:
+    app: prometheus-server
+  type: NodePort
+
+---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -79,6 +93,7 @@ spec:
             - "--config.file=/etc/prometheus/prometheus.yml"
             - "--storage.tsdb.path=/prometheus/"
             - "--web.enable-lifecycle"
+            - "--web.enable-admin-api"
           ports:
             - containerPort: 9090
           volumeMounts:
@@ -86,6 +101,26 @@ spec:
               mountPath: /etc/prometheus/
             - name: prometheus-storage-volume
               mountPath: /prometheus/
+
+        - name: grafana
+          image: grafana/grafana:master
+          env:
+            - name: GF_EXPLORE_ENABLED
+              value: "true"
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          volumeMounts:
+            - name: prometheus-storage-volume
+              mountPath: /var/lib/grafana
+          resources:
+            limits:
+              cpu: 500m
+              memory: 2500Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+
   volumeClaimTemplates:
     - metadata:
         name: prometheus-storage-volume
@@ -93,4 +128,4 @@ spec:
         accessModes: [ "ReadWriteOnce" ]
         resources:
           requests:
-            storage: 3Gi
+            storage: 10Gi

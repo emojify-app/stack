@@ -26,22 +26,102 @@ data:
 
     http {
       upstream emojify-website {
+        keepalive 100;
         server 127.0.0.1:8000;
       }
       upstream emojify-api {
+        keepalive 100;
         server 127.0.0.1:8001;
       }
 
       server {
         location / {
+          proxy_http_version 1.1;
           proxy_pass http://emojify-website;
           proxy_set_header Host $host;
         }
 
         location ~ ^/api(/.*)?$ {
+          proxy_http_version 1.1;
           proxy_pass http://emojify-api$1$is_args$args;
           proxy_pass_request_headers on;
         }
+      }
+    }
+  envoy-bootstrap: |
+    admin:
+      access_log_path: "/dev/null"
+      address:
+        socket_address:
+          address: 127.0.0.1
+          port_value: 19000
+    node:
+      cluster: "${POD_NAME}-emojify-ingress-proxy"
+      id: "${POD_NAME}-emojify-ingress-proxy"
+    static_resources:
+      clusters:
+      - name: local_agent
+        connect_timeout: 1s
+        type: STATIC
+        http2_protocol_options: {}
+        hosts:
+        - socket_address:
+           address: "${HOST_IP}"
+           port_value: "8502"
+    dynamic_resources:
+      lds_config:
+        ads: {}
+      cds_config:
+        ads: {}
+      ads_config:
+        api_type: GRPC
+        grpc_services:
+          envoy_grpc:
+            cluster_name: local_agent
+    stats_sinks:
+    - name: "envoy.statsd"
+      config:
+        address: 
+          socket_address:
+            address: "127.0.0.1"
+            port_value: 9125
+        prefix: "envoy"
+    stats_config:
+      use_all_default_tags: true
+  consul-config: |
+    services {
+      id   = "${POD_NAME}-emojify-ingress-proxy"
+      name = "emojify-ingress-proxy"
+      kind = "connect-proxy"
+      address = "${POD_IP}"
+      port = 20000
+    
+      proxy {
+        destination_service_name = "emojify-ingress"
+        destination_service_id = "emojify-ingress"
+        local_service_address = "127.0.0.1"
+        local_service_port = 80
+
+        upstreams {                                                         
+          destination_name = "emojify-website"                                                                   
+          local_bind_port = 8000
+        }              
+        upstreams {                                           
+          destination_name = "emojify-api"                      
+          local_bind_port = 8001
+        }
+      }
+    
+      checks {
+        name = "Proxy Public Listener"
+        tcp = "${POD_IP}:20000"
+        interval = "10s"
+        deregister_critical_service_after = "1m"
+      }
+    
+      checks {
+        name = "Destination Alias"
+        alias_service = "emojify-ingress"
       }
     }
 
@@ -63,10 +143,7 @@ spec:
       labels:
         app: emojify-ingress
       annotations:
-        "consul.hashicorp.com/service-name": "emojify-ingress"
-        "consul.hashicorp.com/connect-inject": "true"
-        "consul.hashicorp.com/connect-service-upstreams": "emojify-website:8000,emojify-api:8001"
-        "consul.hashicorp.com/connect-service-port": "80"
+        "prometheus_io_scrape": "true"
     spec:
       volumes:
       - name: config
@@ -75,6 +152,16 @@ spec:
           items:
           - key: config
             path: nginx.conf
+      - name: envoy-init
+        configMap:
+          name: emojify-ingress-configmap
+          items:
+          - key: envoy-bootstrap
+            path: envoy_bootstrap.yaml
+          - key: consul-config
+            path: envoy_consul_config.hcl
+      - name: envoy-config
+        emptyDir: {}
       containers:
       - name: emojify-ingress
         image: nginx:latest
@@ -85,3 +172,67 @@ spec:
         - name: config
           mountPath: /etc/nginx/
 
+      - name: envoy-sidecar
+        image: "envoyproxy/envoy-alpine:v1.8.0"
+        command: ["envoy"]
+        args: ["-c","/consul-init/bootstrap.yaml"]
+        ports:
+          - containerPort: 20000
+        volumeMounts:
+        - name: envoy-config
+          mountPath: /consul-init
+          readOnly: true
+        lifecycle:
+          preStop:
+            exec:
+              command: [
+               "sh",
+               "-c",
+               "/consul-init/consul services deregister -http-addr=http://${HOST_IP}:8500 -id=${POD_NAME}-emojify-ingress-proxy"
+               ]
+        env:
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        
+      - name: prometheus-statsd
+        image: prom/statsd-exporter:latest
+        ports:
+          - name: metrics
+            containerPort: 9102
+        resources:
+          limits:
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+      
+      initContainers:
+      - name: envoy-init
+        image: "nicholasjackson/envoy-init:latest"
+        imagePullPolicy: Always
+        env:
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        volumeMounts:
+        - name: envoy-config
+          mountPath: /consul-init
+          readOnly: false
+        - name: envoy-init
+          mountPath: /init
+          readOnly: false
