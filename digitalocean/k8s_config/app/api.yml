@@ -63,7 +63,7 @@ data:
           local_bind_port = 8003
 
           config {
-            envoy_public_listener_json = <<EOL
+            envoy_listener_json = <<EOL
               {
               "@type": "type.googleapis.com/envoy.api.v2.Listener",
               "name": "service:emojify-facebox:8003",
@@ -79,7 +79,7 @@ data:
                     {
                       "name": "envoy.http_connection_manager",
                       "config": {
-                        "stat_prefix": "emojify_facebox",
+                        "stat_prefix": "service:emojify-facebox",
                         "route_config": {
                           "name": "local_route",
                           "virtual_hosts": [
@@ -92,7 +92,7 @@ data:
                                     "prefix": "/"
                                   },
                                   "route": {
-                                    "cluster": "local_app"
+                                    "cluster": "service:emojify-facebox"
                                   }
                                 }
                               ]
