@@ -46,7 +46,7 @@ data:
             action: keep
             regex: "metrics"
           - action: labelmap
-            regex: __meta_kubernetes_pod_label_(.+)
+            regex: __meta_kubernetes_pod_(.+)
 
       - job_name: 'kubernetes-nodes'
         scheme: https

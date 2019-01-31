@@ -105,10 +105,115 @@ data:
         upstreams {                                                         
           destination_name = "emojify-website"                                                                   
           local_bind_port = 8000
+
+          config {
+            envoy_listener_json = <<EOL
+              {
+              "@type": "type.googleapis.com/envoy.api.v2.Listener",
+              "name": "service:emojify-website:8000",
+              "address": {
+                "socketAddress": {
+                  "address": "127.0.0.1",
+                  "portValue": 8000
+                }
+              },
+              "filterChains": [
+                {
+                  "filters": [
+                    {
+                      "name": "envoy.http_connection_manager",
+                      "config": {
+                        "stat_prefix": "service:emojify-website",
+                        "route_config": {
+                          "name": "local_route",
+                          "virtual_hosts": [
+                            {
+                              "name": "backend",
+                              "domains": ["*"],
+                              "routes": [
+                                {
+                                  "match": {
+                                    "prefix": "/"
+                                  },
+                                  "route": {
+                                    "cluster": "service:emojify-website"
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        "http_filters": [
+                          {
+                            "name": "envoy.router",
+                            "config": {}
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+            EOL
+          }
         }              
+
         upstreams {                                           
           destination_name = "emojify-api"                      
           local_bind_port = 8001
+          
+          config {
+            envoy_listener_json = <<EOL
+              {
+              "@type": "type.googleapis.com/envoy.api.v2.Listener",
+              "name": "service:emojify-api:8001",
+              "address": {
+                "socketAddress": {
+                  "address": "127.0.0.1",
+                  "portValue": 8001
+                }
+              },
+              "filterChains": [
+                {
+                  "filters": [
+                    {
+                      "name": "envoy.http_connection_manager",
+                      "config": {
+                        "stat_prefix": "service:emojify-api",
+                        "route_config": {
+                          "name": "local_route",
+                          "virtual_hosts": [
+                            {
+                              "name": "backend",
+                              "domains": ["*"],
+                              "routes": [
+                                {
+                                  "match": {
+                                    "prefix": "/"
+                                  },
+                                  "route": {
+                                    "cluster": "service:emojify-api"
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        "http_filters": [
+                          {
+                            "name": "envoy.router",
+                            "config": {}
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+            EOL
+          }
         }
       }
     
@@ -133,7 +238,7 @@ metadata:
   labels:
     app: emojify-ingress
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: emojify-ingress
