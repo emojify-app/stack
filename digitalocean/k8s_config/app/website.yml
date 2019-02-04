@@ -46,7 +46,7 @@ data:
           envoy_grpc:
             cluster_name: local_agent
     stats_sinks:
-    - name: "envoy.statsd"
+    - name: "envoy.dog_statsd"
       config:
         address: 
           socket_address:
@@ -65,9 +65,61 @@ data:
     
       proxy {
         destination_service_name = "emojify-website"
-        destination_service_id = "emojify-website"
+        destination_service_id = "${POD_NAME}-emojify-website"
         local_service_address = "127.0.0.1"
         local_service_port = 5000
+        
+        config {
+          envoy_public_listener_json = <<EOL
+            {
+              "@type": "type.googleapis.com/envoy.api.v2.Listener",
+              "name": "public_listener:${POD_IP}:20000",
+              "address": {
+                "socketAddress": {
+                  "address": "${POD_IP}",
+                  "portValue": 20000
+                }
+              },
+              "filterChains": [
+                {
+                  "filters": [
+                    {
+                      "name": "envoy.http_connection_manager",
+                      "config": {
+                        "stat_prefix": "ingress_website",
+                        "route_config": {                
+                          "name": "local_route",         
+                          "virtual_hosts": [             
+                            {                            
+                              "name": "backend",         
+                              "domains": ["*"],          
+                              "routes": [                
+                                {                        
+                                  "match": {             
+                                    "prefix": "/"        
+                                  },                     
+                                  "route": {             
+                                    "cluster": "local_app"
+                                  }                      
+                                }                        
+                              ]                          
+                            }                            
+                          ]                              
+                        },                               
+                        "http_filters": [                
+                          {                              
+                            "name": "envoy.router",      
+                            "config": {}                 
+                          }                              
+                        ]                                
+                      }                                  
+                    }                                    
+                  ]                                      
+                }                                        
+              ]                                          
+            }                                          
+          EOL
+        }
       }
     
       checks {

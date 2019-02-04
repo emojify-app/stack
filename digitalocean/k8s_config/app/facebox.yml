@@ -35,7 +35,7 @@ data:
           envoy_grpc:
             cluster_name: local_agent
     stats_sinks:
-    - name: "envoy.statsd"
+    - name: "envoy.dog_statsd"
       config:
         address: 
           socket_address:
@@ -57,23 +57,75 @@ data:
         destination_service_id = "emojify-facebox"
         local_service_address = "127.0.0.1"
         local_service_port = 8080
-      }
-    
-      checks {
-        name = "Proxy Public Listener"
-        tcp = "${POD_IP}:20000"
-        interval = "10s"
-        deregister_critical_service_after = "1m"
-      }
-    
-      checks {
-        name = "Destination Alias"
-        alias_service = "emojify-facebox"
-      }
-    }
-
----
-apiVersion: apps/v1
+        
+        config {
+          envoy_public_listener_json = <<EOL
+            {
+              "@type": "type.googleapis.com/envoy.api.v2.Listener",
+              "name": "public_listener:${POD_IP}:20000",
+              "address": {
+                "socketAddress": {
+                  "address": "${POD_IP}",
+                  "portValue": 20000
+                }
+              },
+              "filterChains": [
+                {
+                  "filters": [
+                    {
+                      "name": "envoy.http_connection_manager",
+                      "config": {
+                        "stat_prefix": "ingress_facebox",
+                        "route_config": {                
+                          "name": "local_route",         
+                          "virtual_hosts": [             
+                            {                            
+                              "name": "backend",         
+                              "domains": ["*"],          
+                              "routes": [                
+                                {                        
+                                  "match": {             
+                                    "prefix": "/"        
+                                  },                     
+                                  "route": {             
+                                    "cluster": "local_app"
+                                  }                      
+                                }                        
+                              ]                          
+                            }                            
+                          ]                              
+                        },                               
+                        "http_filters": [                
+                          {                              
+                            "name": "envoy.router",      
+                            "config": {}                 
+                          }                              
+                        ]                                
+                      }                                  
+                    }                                    
+                  ]                                      
+                }                                        
+              ]                                          
+            }                                          
+          EOL
+        }                                              
+      }                                                
+                                                       
+      checks {                                         
+        name = "Proxy Public Listener"                 
+        tcp = "${POD_IP}:20000"                        
+        interval = "10s"                               
+        deregister_critical_service_after = "1m"       
+      }                                                
+                                                       
+      checks {                                         
+        name = "Destination Alias"                     
+        alias_service = "emojify-facebox"              
+      }                                                
+    }                                                  
+                                                       
+---                                                    
+apiVersion: apps/v1                                    
 kind: Deployment
 metadata:
   name: emojify-facebox

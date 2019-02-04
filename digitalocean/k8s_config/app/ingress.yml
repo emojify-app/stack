@@ -79,7 +79,7 @@ data:
           envoy_grpc:
             cluster_name: local_agent
     stats_sinks:
-    - name: "envoy.statsd"
+    - name: "envoy.dog_statsd"
       config:
         address: 
           socket_address:
@@ -101,6 +101,58 @@ data:
         destination_service_id = "emojify-ingress"
         local_service_address = "127.0.0.1"
         local_service_port = 80
+
+        config {
+          envoy_public_listener_json = <<EOL
+          {
+          "@type": "type.googleapis.com/envoy.api.v2.Listener",
+          "name": "public_listener:${POD_IP}:20000",
+          "address": {
+            "socketAddress": {
+              "address": "${POD_IP}",
+              "portValue": 20000
+            }
+          },
+          "filterChains": [
+            {
+              "filters": [
+                {
+                  "name": "envoy.http_connection_manager",
+                  "config": {
+                    "stat_prefix": "ingress_http",
+                    "route_config": {
+                      "name": "local_route",
+                      "virtual_hosts": [
+                        {
+                          "name": "backend",
+                          "domains": ["*"],
+                          "routes": [
+                            {
+                              "match": {
+                                "prefix": "/"
+                              },
+                              "route": {
+                                "cluster": "local_app"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "http_filters": [
+                      {
+                        "name": "envoy.router",
+                        "config": {}
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+          EOL
+        }
 
         upstreams {                                                         
           destination_name = "emojify-website"                                                                   
@@ -164,6 +216,24 @@ data:
           local_bind_port = 8001
           
           config {
+            envoy_cluster_json = <<EOL
+              {
+                "@type": "type.googleapis.com/envoy.api.v2.Cluster",
+                "name": "service:emojify-api",
+                "type": "EDS",
+                "eds_cluster_config": {
+                  "eds_config": {
+                    "ads": {}
+                  }
+                },
+                "connect_timeout": "5s",
+                "outlier_detection": {
+                  "consecutive_5xx": 5,
+                  "base_ejection_time": "30s"
+                }
+              }
+            EOL
+
             envoy_listener_json = <<EOL
               {
               "@type": "type.googleapis.com/envoy.api.v2.Listener",
@@ -193,7 +263,11 @@ data:
                                     "prefix": "/"
                                   },
                                   "route": {
-                                    "cluster": "service:emojify-api"
+                                    "cluster": "service:emojify-api",
+                                    "retry_policy": {
+                                      "retry_on": "5xx",
+                                      "num_retries": 5
+                                    }
                                   }
                                 }
                               ]

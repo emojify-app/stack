@@ -35,7 +35,7 @@ data:
           envoy_grpc:
             cluster_name: local_agent
     stats_sinks:
-    - name: "envoy.statsd"
+    - name: "envoy.dog_statsd"
       config:
         address: 
           socket_address:
@@ -54,9 +54,61 @@ data:
     
       proxy {
         destination_service_name = "emojify-api"
-        destination_service_id = "emojify-api"
+        destination_service_id = "${POD_NAME}-emojify-api"
         local_service_address = "127.0.0.1"
         local_service_port = 9090
+       
+        config {
+          envoy_public_listener_json = <<EOL
+            {
+            "@type": "type.googleapis.com/envoy.api.v2.Listener",
+            "name": "public_listener:${POD_IP}:20000",
+            "address": {
+              "socketAddress": {
+                "address": "${POD_IP}",
+                "portValue": 20000
+              }
+            },
+            "filterChains": [
+              {
+                "filters": [
+                  {
+                    "name": "envoy.http_connection_manager",
+                    "config": {
+                      "stat_prefix": "ingress_api",
+                      "route_config": {
+                        "name": "local_route",
+                        "virtual_hosts": [
+                          {
+                            "name": "backend",
+                            "domains": ["*"],
+                            "routes": [
+                              {
+                                "match": {
+                                  "prefix": "/"
+                                },
+                                "route": {
+                                  "cluster": "local_app"
+                                }
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      "http_filters": [
+                        {
+                          "name": "envoy.router",
+                          "config": {}
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+            }
+          EOL
+        }
         
         upstreams {                                                         
           destination_name = "emojify-facebox"                                                                   
@@ -65,52 +117,52 @@ data:
           config {
             envoy_listener_json = <<EOL
               {
-              "@type": "type.googleapis.com/envoy.api.v2.Listener",
-              "name": "service:emojify-facebox:8003",
-              "address": {
-                "socketAddress": {
-                  "address": "127.0.0.1",
-                  "portValue": 8003
-                }
-              },
-              "filterChains": [
-                {
-                  "filters": [
-                    {
-                      "name": "envoy.http_connection_manager",
-                      "config": {
-                        "stat_prefix": "service:emojify-facebox",
-                        "route_config": {
-                          "name": "local_route",
-                          "virtual_hosts": [
-                            {
-                              "name": "backend",
-                              "domains": ["*"],
-                              "routes": [
-                                {
-                                  "match": {
-                                    "prefix": "/"
-                                  },
-                                  "route": {
-                                    "cluster": "service:emojify-facebox"
+                "@type": "type.googleapis.com/envoy.api.v2.Listener",
+                "name": "service:emojify-facebox:8003",
+                "address": {
+                  "socketAddress": {
+                    "address": "127.0.0.1",
+                    "portValue": 8003
+                  }
+                },
+                "filterChains": [
+                  {
+                    "filters": [
+                      {
+                        "name": "envoy.http_connection_manager",
+                        "config": {
+                          "stat_prefix": "service:emojify-facebox",
+                          "route_config": {
+                            "name": "local_route",
+                            "virtual_hosts": [
+                              {
+                                "name": "backend",
+                                "domains": ["*"],
+                                "routes": [
+                                  {
+                                    "match": {
+                                      "prefix": "/"
+                                    },
+                                    "route": {
+                                      "cluster": "service:emojify-facebox"
+                                    }
                                   }
-                                }
-                              ]
+                                ]
+                              }
+                            ]
+                          },
+                          "http_filters": [
+                            {
+                              "name": "envoy.router",
+                              "config": {}
                             }
                           ]
-                        },
-                        "http_filters": [
-                          {
-                            "name": "envoy.router",
-                            "config": {}
-                          }
-                        ]
+                        }
                       }
-                    }
-                  ]
-                }
-              ]
-            }
+                    ]
+                  }
+                ]
+              }
             EOL
           }
         }
@@ -171,7 +223,6 @@ spec:
           "-bind-address=0.0.0.0:9090",
           "-statsd-server=127.0.0.1:9125",
           "-path=/",
-          "-cache-error-rate=0.5",
           "-log_format=json",
         ]
         ports:
