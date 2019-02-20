@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: emojify-api-with-fault
   labels:
-    app: emojify-api
+    app: emojify-api-with-fault
 spec:
   replicas: 1
   selector:
@@ -20,7 +20,7 @@ spec:
       volumes:
       - name: envoy-init
         configMap:
-          name: emojify-api-external-cache-configmap
+          name: emojify-api-configmap
           items:
           - key: envoy-bootstrap
             path: envoy_bootstrap.yaml
@@ -31,7 +31,7 @@ spec:
       containers:
 
       - name: emojify-api
-        image: "nicholasjackson/emojify-api:v0.7.0-beta.1"
+        image: "nicholasjackson/emojify-api:v0.6.5"
         imagePullPolicy: Always
         command: ["/service/emojify-api"]
         args: [
@@ -39,9 +39,8 @@ spec:
           "-authn-disable=true",
           "-bind-address=0.0.0.0:9090",
           "-statsd-server=127.0.0.1:9125",
-          "-cache-address=localhost:8005",
-          "-cache-error-rate=0.2", // Requests to the cache error 100% of the time
           "-path=/",
+          "-cache-error-rate=0.2", // Requests to the cache error 100% of the time
           "-log_format=json",
         ]
         ports:
