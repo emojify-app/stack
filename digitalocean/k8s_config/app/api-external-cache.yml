@@ -125,7 +125,7 @@ data:
                     "ads": {}
                   }
                 },
-                "connect_timeout": "30s"
+                "connect_timeout": "60s"
               }
             EOL
 
@@ -306,7 +306,7 @@ spec:
       containers:
 
       - name: emojify-api
-        image: "nicholasjackson/emojify-api:v0.7.0-beta.3"
+        image: "nicholasjackson/emojify-api:v0.7.0-beta.5"
         imagePullPolicy: Always
         command: ["/service/emojify-api"]
         args: [

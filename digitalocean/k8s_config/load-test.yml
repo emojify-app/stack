@@ -83,3 +83,9 @@ spec:
           mountPath: /opt/gatling/user-files/simulations/EmojifySimulation.scala
           subPath: EmojifySimulation.scala
           readOnly: true
+        resources:
+          limits:
+            memory: 1000Mi
+          requests:
+            cpu: 1000m
+            memory: 1000Mi

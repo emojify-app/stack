@@ -179,7 +179,7 @@ spec:
       containers:
 
       - name: emojify-cache
-        image: "nicholasjackson/emojify-cache:v0.3.4"
+        image: "nicholasjackson/emojify-cache:v0.3.5"
         env:
         - name: STATSD_ADDRESS
           value: localhost:9125
@@ -211,6 +211,12 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+        resources:
+          limits:
+            memory: 1000Mi
+          requests:
+            cpu: 1000m
+            memory: 1000Mi
         
       - name: prometheus-statsd
         image: prom/statsd-exporter:latest
