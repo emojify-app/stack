@@ -49,12 +49,13 @@ spec:
         - name: loki
           resources:
             limits:
-              cpu: 1000m
-              memory: 3096Mi
+              cpu: 1500m
+              memory: 3500Mi
             requests:
-              cpu: 1000m
-              memory: 3096Mi
+              cpu: 1500m
+              memory: 3500Mi
           image: grafana/loki:master
+          imagePullPolicy: Always
           args:
             - "--config.file=/etc/loki/loki.yaml"
           ports:
@@ -73,4 +74,4 @@ spec:
         accessModes: [ "ReadWriteOnce" ]
         resources:
           requests:
-            storage: 10Gi
+            storage: 40Gi
