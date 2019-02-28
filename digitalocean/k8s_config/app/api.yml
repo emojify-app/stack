@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: emojify-api-configmap
+  name: emojify-api-external-cache-configmap
 data:
   envoy-bootstrap: |
     admin:
@@ -115,6 +115,20 @@ data:
           local_bind_port = 8003
 
           config {
+            envoy_cluster_json = <<EOL
+              {
+                "@type": "type.googleapis.com/envoy.api.v2.Cluster",
+                "name": "service:emojify-facebox",
+                "type": "EDS",
+                "eds_cluster_config": {
+                  "eds_config": {
+                    "ads": {}
+                  }
+                },
+                "connect_timeout": "60s"
+              }
+            EOL
+
             envoy_listener_json = <<EOL
               {
                 "@type": "type.googleapis.com/envoy.api.v2.Listener",
@@ -166,6 +180,84 @@ data:
             EOL
           }
         }
+
+        upstreams {                                                         
+          destination_name = "emojify-cache"
+          local_bind_port = 8005
+
+          config {
+            envoy_cluster_json = <<EOL
+              {
+                "@type": "type.googleapis.com/envoy.api.v2.Cluster",
+                "name": "service:emojify-cache",
+                "type": "EDS",
+                "http2_protocol_options": {},
+                "eds_cluster_config": {
+                  "eds_config": {
+                    "ads": {}
+                  }
+                },
+                "connect_timeout": "5s"
+              }
+            EOL
+
+            envoy_listener_json = <<EOL
+              {
+                "@type": "type.googleapis.com/envoy.api.v2.Listener",
+                "name": "service:emojify-cache:8005",
+                "address": {
+                  "socketAddress": {
+                    "address": "127.0.0.1",
+                    "portValue": 8005
+                  }
+                },
+                "filterChains": [
+                  {
+                    "filters": [
+                      {
+                        "name": "envoy.http_connection_manager",
+                        "config": {
+                          "codec_type": "auto",
+                          "stat_prefix": "service:emojify-cache",
+                          "route_config": {
+                            "name": "local_route",
+                            "virtual_hosts": [
+                              {
+                                "name": "backend",
+                                "domains": ["*"],
+                                "routes": [
+                                  {
+                                    "match": {
+                                      "prefix": "/",
+                                      "grpc": {}
+                                    },
+                                    "route": {
+                                      "cluster": "service:emojify-cache"
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          "http_filters": [
+                            { 
+                              "name": "envoy.grpc_http1_bridge",
+                              "config": {}
+                            },
+                            {
+                              "name": "envoy.router",
+                              "config": {}
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            EOL
+          }
+        }
       }
     
       checks {
@@ -185,11 +277,14 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: emojify-api
+  name: emojify-api-external-cache
   labels:
     app: emojify-api
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
+  # podAnnotations: {}
   selector:
     matchLabels:
       app: emojify-api
@@ -203,7 +298,7 @@ spec:
       volumes:
       - name: envoy-init
         configMap:
-          name: emojify-api-configmap
+          name: emojify-api-external-cache-configmap
           items:
           - key: envoy-bootstrap
             path: envoy_bootstrap.yaml
@@ -214,7 +309,7 @@ spec:
       containers:
 
       - name: emojify-api
-        image: "nicholasjackson/emojify-api:v0.6.5"
+        image: "nicholasjackson/emojify-api:v0.7.0"
         imagePullPolicy: Always
         command: ["/service/emojify-api"]
         args: [
@@ -222,8 +317,8 @@ spec:
           "-authn-disable=true",
           "-bind-address=0.0.0.0:9090",
           "-statsd-server=127.0.0.1:9125",
+          "-cache-address=localhost:8005",
           "-path=/",
-          "-log_format=json",
         ]
         ports:
         - containerPort: 9090

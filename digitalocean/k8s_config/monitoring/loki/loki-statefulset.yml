@@ -50,10 +50,10 @@ spec:
           resources:
             limits:
               cpu: 1500m
-              memory: 3500Mi
+              memory: 3000Mi
             requests:
               cpu: 1500m
-              memory: 3500Mi
+              memory: 3000Mi
           image: grafana/loki:master
           imagePullPolicy: Always
           args:
