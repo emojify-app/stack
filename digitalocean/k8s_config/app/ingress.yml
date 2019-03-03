@@ -226,10 +226,10 @@ data:
                     "ads": {}
                   }
                 },
-                "connect_timeout": "5s",
+                "connect_timeout": "15s",
                 "outlier_detection": {
-                  "consecutive_5xx": 5,
-                  "base_ejection_time": "30s"
+                  "consecutive_5xx": 50,
+                  "base_ejection_time": "60s"
                 }
               }
             EOL
@@ -264,9 +264,10 @@ data:
                                   },
                                   "route": {
                                     "cluster": "service:emojify-api",
+                                    "timeout": "60s",
                                     "retry_policy": {
                                       "retry_on": "5xx",
-                                      "num_retries": 5
+                                      "num_retries": 3
                                     }
                                   }
                                 }

@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: emojify-api-with-fault
+  name: emojify-api-2
   labels:
     app: emojify-api
 spec:
@@ -22,7 +22,7 @@ spec:
       volumes:
       - name: envoy-init
         configMap:
-          name: emojify-api-external-cache-configmap
+          name: emojify-api-configmap
           items:
           - key: envoy-bootstrap
             path: envoy_bootstrap.yaml
@@ -33,7 +33,7 @@ spec:
       containers:
 
       - name: emojify-api
-        image: "nicholasjackson/emojify-api:v0.7.3"
+        image: "nicholasjackson/emojify-api:v0.8.0"
         imagePullPolicy: Always
         command: ["/service/emojify-api"]
         args: [
@@ -43,7 +43,7 @@ spec:
           "-statsd-server=127.0.0.1:9125",
           "-cache-address=localhost:8005",
           "-facebox-address=localhost:8003",
-          "-cache-error-rate=0.2", // Requests to the cache error 100% of the time
+          "-log-level=info",
           "-path=/",
         ]
         ports:
