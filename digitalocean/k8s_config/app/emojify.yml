@@ -1,28 +1,28 @@
----
-apiVersion: apps/v1
+---                                                    
+apiVersion: apps/v1                                    
 kind: Deployment
 metadata:
-  name: emojify-api-2
+  name: emojify-emojify
   labels:
-    app: emojify-api
+    app: emojify-emojify
 spec:
   replicas: 1
   strategy:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: emojify-api
+      app: emojify-emojify
   template:
     metadata:
       labels:
-        app: emojify-api
+        app: emojify-emojify
       annotations:
         "prometheus_io_scrape": "true"
     spec:
       volumes:
       - name: envoy-init
         configMap:
-          name: emojify-api-configmap
+          name: emojify-emojify-configmap
           items:
           - key: envoy-bootstrap
             path: envoy_bootstrap.yaml
@@ -32,31 +32,27 @@ spec:
         emptyDir: {}
       containers:
 
-      - name: emojify-api
-        image: "nicholasjackson/emojify-api:v0.8.0"
-        imagePullPolicy: Always
-        command: ["/service/emojify-api"]
-        args: [
-          "-allow-origin=*",
-          "-authn-disable=true",
-          "-bind-address=0.0.0.0:9090",
-          "-statsd-server=127.0.0.1:9125",
-          "-cache-address=localhost:8005",
-          "-facebox-address=localhost:8003",
-          "-log-level=info",
-          "-path=/",
-          "--cache-error-rate=1.0",
-          "--cache-error-type=http_error",
-        ]
-        ports:
-        - containerPort: 9090
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 9090
-          initialDelaySeconds: 10
-          periodSeconds: 30
-
+      - name: emojify-emojify
+        image: "nicholasjackson/emojify-emojify:v0.1.0-beta.7"
+        env:
+        - name: STATSD_ADDRESS
+          value: localhost:9125
+        - name: REDIS_ADDRESS
+          value: localhost:8006
+        - name: FACEBOX_ADDRESS
+          value: localhost:8003
+        - name: CACHE_ADDRESS
+          value: localhost:8005
+        - name: LOG_LEVEL
+          value: debug
+      
+      - name: redis
+        image: redis:latest
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+      
       - name: envoy-sidecar
         image: "envoyproxy/envoy-alpine:v1.8.0"
         command: ["envoy"]
@@ -73,7 +69,7 @@ spec:
               command: [
                "sh",
                "-c",
-               "/consul-init/consul services deregister -http-addr=http://${HOST_IP}:8500 -id=${POD_NAME}-emojify-api-proxy"
+               "/consul-init/consul services deregister -http-addr=http://${HOST_IP}:8500 -id=${POD_NAME}-emojify-emojify-proxy"
                ]
         env:
         - name: HOST_IP
@@ -84,6 +80,12 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: metadata.name
+        resources:
+          limits:
+            memory: 200Mi
+          requests:
+            cpu: 200m
+            memory: 200Mi
         
       - name: prometheus-statsd
         image: prom/statsd-exporter:latest

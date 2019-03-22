@@ -1,0 +1,287 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: emojify-emojify-configmap
+data:
+  envoy-bootstrap: |
+    admin:
+      access_log_path: "/dev/null"
+      address:
+        socket_address:
+          address: 127.0.0.1
+          port_value: 19000
+    node:
+      cluster: "${POD_NAME}-emojify-emojify-proxy"
+      id: "${POD_NAME}-emojify-emojify-proxy"
+    static_resources:
+      clusters:
+      - name: local_agent
+        connect_timeout: 1s
+        type: STATIC
+        http2_protocol_options: {}
+        hosts:
+        - socket_address:
+           address: "${HOST_IP}"
+           port_value: "8502"
+    dynamic_resources:
+      lds_config:
+        ads: {}
+      cds_config:
+        ads: {}
+      ads_config:
+        api_type: GRPC
+        grpc_services:
+          envoy_grpc:
+            cluster_name: local_agent
+    stats_sinks:
+    - name: "envoy.dog_statsd"
+      config:
+        address: 
+          socket_address:
+            address: "127.0.0.1"
+            port_value: 9125
+        prefix: "envoy"
+    stats_config:
+      use_all_default_tags: true
+  consul-config: |
+    services {
+      id   = "${POD_NAME}-emojify-emojify-proxy"
+      name = "emojify-emojify-proxy"
+      kind = "connect-proxy"
+      address = "${POD_IP}"
+      port = 20000
+    
+      proxy {
+        destination_service_name = "emojify-emojify"
+        destination_service_id = "${POD_NAME}-emojify-emojify"
+        local_service_address = "127.0.0.1"
+        local_service_port = 9090
+       
+        config {
+            envoy_local_cluster_json = <<EOL
+              {
+                "@type": "type.googleapis.com/envoy.api.v2.Cluster",
+                "name": "local_app",
+                "connect_timeout": "5s",
+                "http2_protocol_options": {},
+                "hosts": [
+                 {
+                  "socket_address": {
+                    "address": "127.0.0.1",
+                    "port_value": 9090
+                  }
+                 }
+                ]
+              }
+            EOL
+
+          envoy_public_listener_json = <<EOL
+            {
+              "@type": "type.googleapis.com/envoy.api.v2.Listener",
+              "name": "public_listener:${POD_IP}:20000",
+              "address": {
+                "socketAddress": {
+                  "address": "${POD_IP}",
+                  "portValue": 20000
+                }
+              },
+              "filterChains": [
+                {
+                  "filters": [
+                    {
+                      "name": "envoy.http_connection_manager",
+                      "config": {
+                        "stat_prefix": "ingress_emojify",
+                        "route_config": {
+                          "name": "local_route",
+                          "virtual_hosts": [
+                            {
+                              "name": "backend",
+                              "domains": ["*"],
+                              "routes": [
+                                {
+                                  "match": {
+                                    "prefix": "/",
+                                    "grpc": {}
+                                  },
+                                  "route": {
+                                    "cluster": "local_app"
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        "http_filters": [
+                          { 
+                            "name": "envoy.grpc_http1_bridge",
+                            "config": {}
+                          },
+                          {
+                            "name": "envoy.router",
+                            "config": {}
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          EOL
+        }
+        
+        upstreams {                                                         
+          destination_name = "emojify-redis" 
+          local_bind_port = 8006
+        }
+
+        upstreams {                                                         
+          destination_name = "emojify-facebox"                                                                   
+          local_bind_port = 8003
+
+          config {
+            envoy_listener_json = <<EOL
+              {
+                "@type": "type.googleapis.com/envoy.api.v2.Listener",
+                "name": "service:emojify-facebox:8003",
+                "address": {
+                  "socketAddress": {
+                    "address": "127.0.0.1",
+                    "portValue": 8003
+                  }
+                },
+                "filterChains": [
+                  {
+                    "filters": [
+                      {
+                        "name": "envoy.http_connection_manager",
+                        "config": {
+                          "stat_prefix": "service:emojify-facebox",
+                          "route_config": {
+                            "name": "local_route",
+                            "virtual_hosts": [
+                              {
+                                "name": "backend",
+                                "domains": ["*"],
+                                "routes": [
+                                  {
+                                    "match": {
+                                      "prefix": "/"
+                                    },
+                                    "route": {
+                                      "cluster": "service:emojify-facebox"
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          "http_filters": [
+                            {
+                              "name": "envoy.router",
+                              "config": {}
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            EOL
+          }
+        }
+
+        upstreams {                                                         
+          destination_name = "emojify-cache"
+          local_bind_port = 8005
+
+          config {
+            envoy_cluster_json = <<EOL
+              {
+                "@type": "type.googleapis.com/envoy.api.v2.Cluster",
+                "name": "service:emojify-cache",
+                "type": "EDS",
+                "connect_timeout": "5s",
+                "http2_protocol_options": {},
+                "eds_cluster_config": {
+                  "eds_config": {
+                    "ads": {}
+                  }
+                }
+              }
+            EOL
+
+            envoy_listener_json = <<EOL
+              {
+                "@type": "type.googleapis.com/envoy.api.v2.Listener",
+                "name": "service:emojify-cache:8005",
+                "address": {
+                  "socketAddress": {
+                    "address": "127.0.0.1",
+                    "portValue": 8005
+                  }
+                },
+                "filterChains": [
+                  {
+                    "filters": [
+                      {
+                        "name": "envoy.http_connection_manager",
+                        "config": {
+                          "codec_type": "auto",
+                          "stat_prefix": "service:emojify-cache",
+                          "route_config": {
+                            "name": "local_route",
+                            "virtual_hosts": [
+                              {
+                                "name": "backend",
+                                "domains": ["*"],
+                                "routes": [
+                                  {
+                                    "match": {
+                                      "prefix": "/",
+                                      "grpc": {}
+                                    },
+                                    "route": {
+                                      "cluster": "service:emojify-cache"
+                                    }
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          "http_filters": [
+                            { 
+                              "name": "envoy.grpc_http1_bridge",
+                              "config": {}
+                            },
+                            {
+                              "name": "envoy.router",
+                              "config": {}
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            EOL
+          }
+        }
+      }
+    
+      checks {
+        name = "Proxy Public Listener"
+        tcp = "${POD_IP}:20000"
+        interval = "10s"
+        deregister_critical_service_after = "1m"
+      }
+    
+      checks {
+        name = "Destination Alias"
+        alias_service = "emojify-emojify"
+      }
+    }

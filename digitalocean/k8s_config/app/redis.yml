@@ -1,0 +1,36 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  template:
+    metadata:
+      annotations:
+        "prometheus_io_scrape": "true"
+        "consul.hashicorp.com/connect-inject": "true"
+        "consul.hashicorp.com/service-name": "emojify-redis"
+        "consul.hashicorp.com/connect-service-port": "6379"
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: emojify-redis
+        image: redis:latest
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+          - containerPort: 6379
+      
+      - name: redis-exporter
+        image: oliver006/redis_exporter:latest
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+          - name: metrics
+            containerPort: 9121

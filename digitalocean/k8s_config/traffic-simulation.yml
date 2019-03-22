@@ -1,0 +1,26 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emojify-traffic
+  labels:
+    app: emojify-traffic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: emojify-traffic
+  template:
+    metadata:
+      labels:
+        app: emojify-traffic
+    spec:
+      containers:
+      - name: emojify-traffic
+        image: "nicholasjackson/emojify-traffic:v0.1.3"
+        command: ["/emojify-traffic"]
+        args: [
+          "-users", "5",
+          "-base-uri","http://emojify-ingress-service",
+          "-show-progress", "false",
+          ]
