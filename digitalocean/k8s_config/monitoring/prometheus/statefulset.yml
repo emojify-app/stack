@@ -101,6 +101,7 @@ spec:
               mountPath: /etc/prometheus/
             - name: prometheus-storage-volume
               mountPath: /prometheus/
+              subPath: prometheus
 
         - name: grafana
           image: grafana/grafana:6.0.0-beta3

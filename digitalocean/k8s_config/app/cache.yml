@@ -221,7 +221,7 @@ spec:
             memory: 200Mi
         
       - name: prometheus-statsd
-        image: prom/statsd-exporter:latest
+        image: prom/statsd-exporter:v0.8.1
         ports:
           - name: metrics
             containerPort: 9102

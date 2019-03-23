@@ -46,7 +46,8 @@ spec:
           "-log-level=info",
           "-path=/",
           "--cache-error-rate=1.0",
-          "--cache-error-type=http_error",
+          "--cache-error-type=delay",
+          "--cache-error-delay=5s"
         ]
         ports:
         - containerPort: 9090
@@ -86,7 +87,7 @@ spec:
               fieldPath: metadata.name
         
       - name: prometheus-statsd
-        image: prom/statsd-exporter:latest
+        image: prom/statsd-exporter:v0.8.1
         ports:
           - name: metrics
             containerPort: 9102

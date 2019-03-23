@@ -228,7 +228,7 @@ data:
                 },
                 "connect_timeout": "15s",
                 "outlier_detection": {
-                  "consecutive_5xx": 50,
+                  "consecutive_5xx": 10,
                   "base_ejection_time": "60s"
                 }
               }
@@ -264,10 +264,11 @@ data:
                                   },
                                   "route": {
                                     "cluster": "service:emojify-api",
-                                    "timeout": "60s",
+                                    "timeout": "10s",
                                     "retry_policy": {
-                                      "retry_on": "5xx",
-                                      "num_retries": 3
+                                      "retry_on": "5xx,gateway-error",
+                                      "num_retries": 3,
+                                      "per_try_timeout": "2s"
                                     }
                                   }
                                 }
@@ -381,7 +382,7 @@ spec:
               fieldPath: metadata.name
         
       - name: prometheus-statsd
-        image: prom/statsd-exporter:latest
+        image: prom/statsd-exporter:v0.8.1
         ports:
           - name: metrics
             containerPort: 9102
