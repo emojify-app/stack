@@ -31,7 +31,7 @@ function open_service {
   echo " "
 	echo "Opening $3, To quit, press Ctrl-C"
 	sleep 5
-  eval $OPEN "$4://localhost:$1"
+  eval $OPEN "$4://localhost:$1$6"
 	trap "pkill -F .pid_$3" SIGINT SIGTERM ERR EXIT; sleep 20000
   echo " "
 }
@@ -54,16 +54,25 @@ case "$1" in
     get_k8s_config
     open_service 3000 3000 grafana http default
     ;;
+  ambassador-admin)
+    get_k8s_config
+    open_service 8877 8877 ambassador-admin http default /ambassador/v0/diag/
+    ;;
+  ambassador-web)
+    get_k8s_config
+    open_service 8443 443 ambassador https default
+    ;;
   get_k8s_config)
     echo Fetching Kubernetes configuration
     get_k8s_config
     ;;
   *)
     echo "Usage:"
-    echo "dashboard  - Open the Kubernetes dashboard"
-    echo "consul     - Open the Consul UI"
-    echo "prometheus - Open the Prometheus UI"
-    echo "grafana    - Open the Grafana UI"
-    echo "get_k8s_config  - Fetch Kubernetes config from the remote state"
+    echo "dashboard        - Open the Kubernetes dashboard"
+    echo "consul           - Open the Consul UI"
+    echo "prometheus       - Open the Prometheus UI"
+    echo "grafana          - Open the Grafana UI"
+    echo "ambassador-admin - Open the Ambassador admin UI"
+    echo "get_k8s_config   - Fetch Kubernetes config from the remote state"
     exit 1
 esac

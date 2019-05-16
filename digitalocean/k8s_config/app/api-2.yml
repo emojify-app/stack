@@ -33,22 +33,26 @@ spec:
       containers:
 
       - name: emojify-api
-        image: "nicholasjackson/emojify-api:v0.8.0"
+        image: "nicholasjackson/emojify-api:v0.9.8"
         imagePullPolicy: Always
         command: ["/service/emojify-api"]
-        args: [
-          "-allow-origin=*",
-          "-authn-disable=true",
-          "-bind-address=0.0.0.0:9090",
-          "-statsd-server=127.0.0.1:9125",
-          "-cache-address=localhost:8005",
-          "-facebox-address=localhost:8003",
-          "-log-level=info",
-          "-path=/",
-          "--cache-error-rate=1.0",
-          "--cache-error-type=delay",
-          "--cache-error-delay=5s"
-        ]
+        env:
+        - name: ALLOW_ORIGIN
+          value: "*"
+        - name: BIND_ADDRESS
+          value: "0.0.0.0:9090"
+        - name: AUTHN_DISABLE
+          value: "true"
+        - name: STATSD_ADDRESS
+          value: "127.0.0.1:9125"
+        - name: CACHE_ADDRESS
+          value: "127.0.0.1:8005"
+        - name: FACEBOX_ADDRESS
+          value: "127.0.0.1:8003"
+        - name: LOG_LEVEL
+          value: "debug"
+        - name: ROOT_PATH
+          value: "/"
         ports:
         - containerPort: 9090
         livenessProbe:
