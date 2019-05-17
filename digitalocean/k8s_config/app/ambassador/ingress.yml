@@ -5,17 +5,21 @@ metadata:
  name: ingress-consul
  annotations:
    getambassador.io/config: |
-     ---
-     apiVersion: ambassador/v1
-     kind: Mapping
-     name: consul_ingress_mapping
-     prefix: /
-     service: emojify-website
-     resolver: consul-dc1
-     load_balancer: 
-       policy: round_robin
+      ---
+      apiVersion: ambassador/v1
+      kind: Mapping
+      name: consul_website_mapping
+      prefix: /
+      service: emojify-website-proxy
+      resolver: consul-dc1
+      tls: ambassador-consul
+      load_balancer:
+        policy: round_robin
 spec:
- ports:
- - name: https
-   port: 443
-   targetPort: 8443
+  ports:
+  - name: https
+    port: 443
+    targetPort: 8443
+  - name: http
+    port: 80
+    targetPort: 8080

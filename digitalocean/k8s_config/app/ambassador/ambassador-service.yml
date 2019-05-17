@@ -19,9 +19,9 @@ metadata:
         server:
           enabled: true
           secret: ambassador-certs
+          redirect_cleartext_from: 8080
 spec:
   type: LoadBalancer
-  externalTrafficPolicy: Local
   ports:
     - port: 80
       targetPort: 8080
