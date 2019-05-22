@@ -21,6 +21,6 @@ spec:
         command: ["/emojify-traffic"]
         args: [
           "-users", "5",
-          "-base-uri","http://emojify-ingress-service",
+          "-base-uri","https://emojify.today",
           "-show-progress", "false",
           ]

@@ -30,12 +30,8 @@ spec:
             value: "true"
           - name: CACHE_ADDRESS
             value: localhost:8005
-          - name: CACHE_ERROR_RATE
-            value: "0.5"
           - name: FACEBOX_ADDRESS
             value: localhost:8003
-          - name: LOG_FILE
-            value: /var/log/emojify.log
           - name: STATSD_ADDRESS
             value: localhost:9125
           - name: BIND_ADDRESS

@@ -10,7 +10,31 @@ metadata:
       kind: Mapping
       name: consul_website_mapping
       prefix: /
+      host: emojify.today
       service: emojify-website-proxy
+      resolver: consul-dc1
+      tls: ambassador-consul
+      load_balancer:
+        policy: round_robin
+      ---
+      apiVersion: ambassador/v1
+      kind: Mapping
+      name: consul_api_mapping
+      prefix: /api/
+      timeout_ms: 20000
+      host: emojify.today
+      service: emojify-api-proxy
+      resolver: consul-dc1
+      tls: ambassador-consul
+      load_balancer:
+        policy: round_robin
+      ---
+      apiVersion: ambassador/v1
+      kind: Mapping
+      name: consul_grafana_mapping
+      prefix: /
+      host: grafana.emojify.today
+      service: grafana-proxy
       resolver: consul-dc1
       tls: ambassador-consul
       load_balancer:
