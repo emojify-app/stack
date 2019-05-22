@@ -1,49 +1,45 @@
 ---
-apiVersion: v1
-kind: Service
+apiVersion: getambassador.io/v1
+kind: Mapping
 metadata:
- name: ingress-consul
- annotations:
-   getambassador.io/config: |
-      ---
-      apiVersion: ambassador/v1
-      kind: Mapping
-      name: consul_website_mapping
-      prefix: /
-      host: emojify.today
-      service: emojify-website-proxy
-      resolver: consul-dc1
-      tls: ambassador-consul
-      load_balancer:
-        policy: round_robin
-      ---
-      apiVersion: ambassador/v1
-      kind: Mapping
-      name: consul_api_mapping
-      prefix: /api/
-      timeout_ms: 20000
-      host: emojify.today
-      service: emojify-api-proxy
-      resolver: consul-dc1
-      tls: ambassador-consul
-      load_balancer:
-        policy: round_robin
-      ---
-      apiVersion: ambassador/v1
-      kind: Mapping
-      name: consul_grafana_mapping
-      prefix: /
-      host: grafana.emojify.today
-      service: grafana-proxy
-      resolver: consul-dc1
-      tls: ambassador-consul
-      load_balancer:
-        policy: round_robin
+  name: consul-website-mapping
+  namespace: default
 spec:
-  ports:
-  - name: https
-    port: 443
-    targetPort: 8443
-  - name: http
-    port: 80
-    targetPort: 8080
+  prefix: /
+  host: emojify.today
+  service: emojify-website-proxy
+  resolver: consul-dc1
+  tls: ambassador-consul
+  load_balancer:
+    policy: round_robin
+
+---
+apiVersion: getambassador.io/v1
+kind: Mapping
+metadata:
+  name: consul-api-mapping
+  namespace: default
+spec:
+  prefix: /api/
+  timeout_ms: 20000
+  host: emojify.today
+  service: emojify-api-proxy
+  resolver: consul-dc1
+  tls: ambassador-consul
+  load_balancer:
+    policy: round_robin
+
+---
+apiVersion: getambassador.io/v1
+kind: Mapping
+metadata:
+  name: consul-grafana-mapping
+  namespace: default
+spec:
+  prefix: /
+  host: grafana.emojify.today
+  service: grafana-proxy
+  resolver: consul-dc1
+  tls: ambassador-consul
+  load_balancer:
+    policy: round_robin

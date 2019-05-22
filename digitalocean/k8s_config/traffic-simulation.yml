@@ -17,10 +17,12 @@ spec:
     spec:
       containers:
       - name: emojify-traffic
-        image: "nicholasjackson/emojify-traffic:v0.1.3"
+        image: "nicholasjackson/emojify-traffic:v0.2.1"
         command: ["/emojify-traffic"]
-        args: [
-          "-users", "5",
-          "-base-uri","https://emojify.today",
-          "-show-progress", "false",
-          ]
+        env:
+        - name: USERS
+          value: "5"
+        - name: BASE_URI
+          value: "https://emojify.today"
+        - name: SHOW_PROGRESS
+          value: "false"

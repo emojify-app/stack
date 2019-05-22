@@ -11,15 +11,6 @@ metadata:
       name: consul-dc1
       address: consul-server:8500
       datacenter: dc1
-      ---
-      apiVersion: ambassador/v1
-      kind: Module
-      name: tls
-      config:
-        server:
-          enabled: true
-          secret: ambassador-certs
-          redirect_cleartext_from: 8080
 spec:
   type: LoadBalancer
   ports:
