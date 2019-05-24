@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: emojify-web-configmap
+  name: emojify-website-configmap
 data:
   config: |
     window.env = {};
@@ -24,36 +24,49 @@ metadata:
   labels:
     app: emojify-website
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: emojify-website
   template:
     metadata:
-      annotations:
-        "consul.hashicorp.com/service-name": "emojify-website"
-        "consul.hashicorp.com/connect-service-port": "5000"
-        "consul.hashicorp.com/connect-inject": "true"
       labels:
         app: emojify-website
+      annotations:
+        "consul.hashicorp.com/connect-inject": "true"
+        "consul.hashicorp.com/connect-service-protocol": "http"
+        "prometheus_io_scrape": "true"
     spec:
       volumes:
       - name: config
         configMap:
-          name: emojify-web-configmap
+          name: emojify-website-configmap
           items:
           - key: config
             path: env.js
-      containers:
-      - name: emojify-website
-        image: "nicholasjackson/emojify-website:v0.5.9"
-        imagePullPolicy: Always
-        command: ["serve"]
-        args: ["-s", "build"]
-        ports:
-        - containerPort: 5000
 
+      containers:
+
+      - name: emojify-website
+        image: "nicholasjackson/emojify-website:v0.6.2"
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
         volumeMounts:
         - name: config
-          mountPath: /app/build/config/
+          mountPath: /usr/share/nginx/html/config
           readOnly: true
+      
+      - name: prometheus-statsd
+        image: "prom/statsd-exporter:latest"
+        ports:
+          - name: metrics
+            containerPort: 9102
+          - name: statsd
+            containerPort: 9125
+        resources:
+          limits:
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi

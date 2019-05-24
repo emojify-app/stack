@@ -62,6 +62,10 @@ spec:
     metadata:
       labels:
         app: prometheus-server
+      annotations:
+        "consul.hashicorp.com/connect-inject": "true"
+        "consul.hashicorp.com/connect-service": "grafana"
+        "consul.hashicorp.com/connect-service-port": "3000"
     spec:
       securityContext:
         fsGroup: 2000
@@ -79,6 +83,7 @@ spec:
             - "--config.file=/etc/prometheus/prometheus.yml"
             - "--storage.tsdb.path=/prometheus/"
             - "--web.enable-lifecycle"
+            - "--web.enable-admin-api"
           ports:
             - containerPort: 9090
           volumeMounts:
@@ -86,6 +91,28 @@ spec:
               mountPath: /etc/prometheus/
             - name: prometheus-storage-volume
               mountPath: /prometheus/
+              subPath: prometheus
+
+        - name: grafana
+          image: grafana/grafana:6.1.6
+          env:
+            - name: GF_EXPLORE_ENABLED
+              value: "true"
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          volumeMounts:
+            - name: prometheus-storage-volume
+              mountPath: /var/lib/grafana
+          resources:
+            limits:
+              cpu: 500m
+              memory: 2500Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+      nodeName: goofy-darwin-u3hb
+
   volumeClaimTemplates:
     - metadata:
         name: prometheus-storage-volume
@@ -93,4 +120,4 @@ spec:
         accessModes: [ "ReadWriteOnce" ]
         resources:
           requests:
-            storage: 3Gi
+            storage: 10Gi

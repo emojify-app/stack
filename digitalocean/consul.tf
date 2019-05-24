@@ -13,12 +13,36 @@ resource "helm_release" "consul" {
 
   set {
     name  = "global.image"
-    value = "consul:1.4.0"
+    value = "nicholasjackson/consul-dev:latest"
   }
 
   set {
     name  = "global.imageK8S"
     value = "nicholasjackson/consul-k8s:latest"
+  }
+
+  set {
+    name = "server.extraConfig"
+
+    value = <<-EOF
+        {
+          "telemetry": {
+            "prometheus_retention_time": "24h"
+          }
+        }
+      EOF
+  }
+
+  set {
+    name = "client.extraConfig"
+
+    value = <<-EOF
+        {
+          "telemetry": {
+            "prometheus_retention_time": "24h"
+          }
+        }
+      EOF
   }
 
   set {

@@ -1,7 +1,7 @@
 resource "digitalocean_kubernetes_cluster" "emojify" {
   name    = "emojify"
   region  = "ams3"
-  version = "1.12.3-do.2"
+  version = "1.12.3-do.3"
   tags    = ["production"]
 
   node_pool {

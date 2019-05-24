@@ -16,40 +16,45 @@ spec:
         app: emojify-api
       annotations:
         "consul.hashicorp.com/connect-inject": "true"
-        "consul.hashicorp.com/connect-service-upstreams": "emojify-facebox:8003"
-        "consul.hashicorp.com/connect-service-port": "9090"
+        "consul.hashicorp.com/connect-service-protocol": "http"
+        "consul.hashicorp.com/connect-service-upstreams": "emojify-facedetect:8003,emojify-cache:8005"
+        "prometheus_io_scrape": "true"
     spec:
       containers:
       - name: emojify-api
-        image: "nicholasjackson/emojify-api:v0.6.3"
+        image: "nicholasjackson/emojify-api:v0.9.8"
         imagePullPolicy: Always
         command: ["/service/emojify-api"]
-        args: [
-          "-allow-origin=*",
-          "-authn-disable=true",
-          "-bind-address=0.0.0.0:9090",
-          "-statsd-server=$(HOST_IP):9125",
-          "-path=/",
-          "-log_format=json",
-        ]
         ports:
         - containerPort: 9090
         env:
-        - name: FACEBOX
-          value: http://localhost:8003
-        - name: HOST_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.hostIP
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 9090
-          initialDelaySeconds: 10
-          periodSeconds: 30
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 9090
-          initialDelaySeconds: 10
-          periodSeconds: 30
+          - name: AUTHN_DISABLE
+            value: "true"
+          - name: CACHE_ADDRESS
+            value: localhost:8005
+          - name: FACEBOX_ADDRESS
+            value: localhost:8003
+          - name: STATSD_ADDRESS
+            value: localhost:9125
+          - name: BIND_ADDRESS
+            value: "127.0.0.1:9090"
+        resources:
+          limits:
+            cpu: 300m
+          requests:
+            cpu: 100m
+            memory: 100Mi
+
+      - name: prometheus-statsd
+        image: "prom/statsd-exporter:latest"
+        ports:
+          - name: metrics
+            containerPort: 9102
+          - name: statsd
+            containerPort: 9125
+        resources:
+          limits:
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
