@@ -2,35 +2,36 @@
 apiVersion: apps/v1                                    
 kind: Deployment
 metadata:
-  name: emojify-cache
+  name: emojify-facedetect
   labels:
-    app: emojify-cache
+    app: emojify-facedetect
 spec:
   replicas: 1
-  strategy:
-    type: RollingUpdate
   selector:
     matchLabels:
-      app: emojify-cache
+      app: emojify-facedetect
   template:
     metadata:
       labels:
-        app: emojify-cache
+        app: emojify-facedetect
       annotations:
         "consul.hashicorp.com/connect-inject": "true"
-        "consul.hashicorp.com/connect-service-protocol": "grpc"
+        "consul.hashicorp.com/connect-service-protocol": "http"
         "prometheus_io_scrape": "true"
     spec:
       containers:
-
-      - name: emojify-cache
-        image: "nicholasjackson/emojify-cache:v0.4.3"
+      - name: emojify-facedetect
+        image: "nicholasjackson/emojify-facedetection:v0.10.0"
         ports:
         - containerPort: 9090
         env:
+        - name: MIN_NEIGHBORS
+          value: "14"
+        - name: SCALE_FACTOR
+          value: "1.03"
         - name: STATSD_ADDRESS
           value: localhost:9125
-      
+
       - name: prometheus-statsd
         image: "prom/statsd-exporter:latest"
         ports:

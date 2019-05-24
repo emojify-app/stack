@@ -38,28 +38,22 @@ function open_service {
 
 case "$1" in
   dashboard)
-    get_k8s_config
     get_service_token
     open_service 8443 443 kubernetes-dashboard https kube-system
     ;;
   consul)
-    get_k8s_config
-    open_service 8180 80 consul-ui http default
+    open_service 8180 80 consul-consul-ui http default
     ;;
   prometheus)
-    get_k8s_config
     open_service 9090 9090 prometheus http default
     ;;
   grafana)
-    get_k8s_config
     open_service 3000 3000 grafana http default
     ;;
   ambassador-admin)
-    get_k8s_config
     open_service 8877 8877 ambassador-admin http default /ambassador/v0/diag/
     ;;
   ambassador-web)
-    get_k8s_config
     open_service 8443 443 ambassador https default
     ;;
   get_k8s_config)

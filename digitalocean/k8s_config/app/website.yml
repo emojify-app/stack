@@ -33,8 +33,9 @@ spec:
       labels:
         app: emojify-website
       annotations:
-        "prometheus_io_scrape": "true"
         "consul.hashicorp.com/connect-inject": "true"
+        "consul.hashicorp.com/connect-service-protocol": "http"
+        "prometheus_io_scrape": "true"
     spec:
       volumes:
       - name: config
@@ -43,6 +44,7 @@ spec:
           items:
           - key: config
             path: env.js
+
       containers:
 
       - name: emojify-website
@@ -54,3 +56,17 @@ spec:
         - name: config
           mountPath: /usr/share/nginx/html/config
           readOnly: true
+      
+      - name: prometheus-statsd
+        image: "prom/statsd-exporter:latest"
+        ports:
+          - name: metrics
+            containerPort: 9102
+          - name: statsd
+            containerPort: 9125
+        resources:
+          limits:
+            memory: 100Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi

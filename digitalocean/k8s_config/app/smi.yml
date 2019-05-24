@@ -1,0 +1,139 @@
+# TCPRoute for Website Service
+---
+apiVersion: specs.smi-spec.io/v1alpha1
+kind: TCPRoute
+metadata:
+  name: emojify-website-tcp-route
+
+# TrafficTarget defines allowed routes for service-a
+# In this example service-b is allow to connect using
+# TCP
+---
+kind: TrafficTarget
+apiVersion: access.smi-spec.io/v1alpha1
+metadata:
+  name: emojify-website-targets
+  namespace: default
+destination:
+  kind: ServiceAccount
+  name: emojify-website
+  namespace: default
+sources:
+- kind: ServiceAccount
+  name: ambassador
+  namespace: default
+specs:
+- kind: TCPRoute
+  name: emojify-website-tcp-route
+
+# TCPRoute for API Service
+---
+apiVersion: specs.smi-spec.io/v1alpha1
+kind: TCPRoute
+metadata:
+  name: emojify-api-tcp-route
+
+# TrafficTarget defines allowed routes for service-a
+# In this example service-b is allow to connect using
+# TCP
+---
+kind: TrafficTarget
+apiVersion: access.smi-spec.io/v1alpha1
+metadata:
+  name: emojify-api-targets
+  namespace: default
+destination:
+  kind: ServiceAccount
+  name: emojify-api
+  namespace: default
+sources:
+- kind: ServiceAccount
+  name: ambassador
+  namespace: default
+specs:
+- kind: TCPRoute
+  name: emojify-api-tcp-route
+
+# TCPRoute for Cache Service
+---
+apiVersion: specs.smi-spec.io/v1alpha1
+kind: TCPRoute
+metadata:
+  name: emojify-cache-tcp-route
+
+# TrafficTarget defines allowed routes for service-a
+# In this example service-b is allow to connect using
+# TCP
+---
+kind: TrafficTarget
+apiVersion: access.smi-spec.io/v1alpha1
+metadata:
+  name: emojify-cache-targets
+  namespace: default
+destination:
+  kind: ServiceAccount
+  name: emojify-cache
+  namespace: default
+sources:
+- kind: ServiceAccount
+  name: emojify-api
+  namespace: default
+specs:
+- kind: TCPRoute
+  name: emojify-cache-tcp-route
+
+# TCPRoute for FaceDetect Service
+---
+apiVersion: specs.smi-spec.io/v1alpha1
+kind: TCPRoute
+metadata:
+  name: emojify-facedetect-tcp-route
+
+# TrafficTarget defines allowed routes for service-a
+# In this example service-b is allow to connect using
+# TCP
+---
+kind: TrafficTarget
+apiVersion: access.smi-spec.io/v1alpha1
+metadata:
+  name: emojify-cache-targets
+  namespace: default
+destination:
+  kind: ServiceAccount
+  name: emojify-facedetect
+  namespace: default
+sources:
+- kind: ServiceAccount
+  name: emojify-api
+  namespace: default
+specs:
+- kind: TCPRoute
+  name: emojify-facedetect-tcp-route
+
+# TCPRoute for Grafana Service
+---
+apiVersion: specs.smi-spec.io/v1alpha1
+kind: TCPRoute
+metadata:
+  name: grafana-tcp-route
+
+# TrafficTarget defines allowed routes for service-a
+# In this example service-b is allow to connect using
+# TCP
+---
+kind: TrafficTarget
+apiVersion: access.smi-spec.io/v1alpha1
+metadata:
+  name: grafana-targets
+  namespace: default
+destination:
+  kind: ServiceAccount
+  name: grafana
+  namespace: default
+sources:
+- kind: ServiceAccount
+  name: ambassador
+  namespace: default
+specs:
+- kind: TCPRoute
+  name: grafana-tcp-route

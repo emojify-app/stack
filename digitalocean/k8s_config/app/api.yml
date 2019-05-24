@@ -16,7 +16,9 @@ spec:
         app: emojify-api
       annotations:
         "consul.hashicorp.com/connect-inject": "true"
-        "consul.hashicorp.com/connect-service-upstreams": "emojify-facebox:8003,emojify-cache:8005"
+        "consul.hashicorp.com/connect-service-protocol": "http"
+        "consul.hashicorp.com/connect-service-upstreams": "emojify-facedetect:8003,emojify-cache:8005"
+        "prometheus_io_scrape": "true"
     spec:
       containers:
       - name: emojify-api
@@ -35,13 +37,7 @@ spec:
           - name: STATSD_ADDRESS
             value: localhost:9125
           - name: BIND_ADDRESS
-            value: "0.0.0.0:9090"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 9090
-          initialDelaySeconds: 10
-          periodSeconds: 30
+            value: "127.0.0.1:9090"
         resources:
           limits:
             cpu: 300m
