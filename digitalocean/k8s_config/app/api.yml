@@ -6,7 +6,7 @@ metadata:
   labels:
     app: emojify-api
 spec:
-  replicas: 1
+  replicas: 5
   selector:
     matchLabels:
       app: emojify-api
@@ -53,8 +53,6 @@ spec:
           - name: statsd
             containerPort: 9125
         resources:
-          limits:
-            memory: 100Mi
           requests:
-            cpu: 100m
-            memory: 100Mi
+            cpu: 50m
+            memory: 50Mi

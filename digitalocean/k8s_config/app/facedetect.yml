@@ -31,6 +31,13 @@ spec:
           value: "1.03"
         - name: STATSD_ADDRESS
           value: localhost:9125
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 2000Mi
+          requests:
+            cpu: 1
+            memory: 1000Mi
 
       - name: prometheus-statsd
         image: "prom/statsd-exporter:latest"
@@ -40,8 +47,6 @@ spec:
           - name: statsd
             containerPort: 9125
         resources:
-          limits:
-            memory: 100Mi
           requests:
-            cpu: 100m
-            memory: 100Mi
+            cpu: 50m
+            memory: 50Mi
