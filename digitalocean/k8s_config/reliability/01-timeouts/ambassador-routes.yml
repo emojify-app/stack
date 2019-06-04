@@ -1,0 +1,54 @@
+---
+apiVersion: getambassador.io/v1
+kind: Mapping
+metadata:
+  name: consul-website-mapping
+  namespace: default
+spec:
+  prefix: /
+  host: emojify.today
+  service: emojify-website-sidecar-proxy
+  resolver: consul-dc1
+  tls: ambassador-consul
+  load_balancer:
+    policy: round_robin
+  timeout_ms: 4000
+  idle_timeout_ms: 500000
+  connect_timeout_ms: 4000
+
+---
+apiVersion: getambassador.io/v1
+kind: Mapping
+metadata:
+  name: consul-api-mapping
+  namespace: default
+spec:
+  prefix: /api/
+  timeout_ms: 20000
+  host: emojify.today
+  service: emojify-api-sidecar-proxy
+  resolver: consul-dc1
+  tls: ambassador-consul
+  load_balancer:
+    policy: round_robin
+  timeout_ms: 4000
+  idle_timeout_ms: 500000
+  connect_timeout_ms: 4000
+
+---
+apiVersion: getambassador.io/v1
+kind: Mapping
+metadata:
+  name: consul-grafana-mapping
+  namespace: default
+spec:
+  prefix: /
+  host: grafana.emojify.today
+  service: grafana-sidecar-proxy
+  resolver: consul-dc1
+  tls: ambassador-consul
+  load_balancer:
+    policy: round_robin
+  timeout_ms: 4000
+  idle_timeout_ms: 500000
+  connect_timeout_ms: 4000
