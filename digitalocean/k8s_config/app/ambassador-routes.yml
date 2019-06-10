@@ -20,10 +20,10 @@ metadata:
   name: consul-api-mapping
   namespace: default
 spec:
-  prefix: /api/
+  prefix: /v2/api/
   timeout_ms: 20000
   host: emojify.today
-  service: emojify-api-sidecar-proxy
+  service: emojify-api-v2-sidecar-proxy
   resolver: consul-dc1
   tls: ambassador-consul
   load_balancer:

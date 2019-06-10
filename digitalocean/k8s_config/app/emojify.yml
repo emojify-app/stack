@@ -2,41 +2,43 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: emojify-api-v2
+  name: emojify-emojify
   labels:
-    app: emojify-api-v2
+    app: emojify-emojify
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: emojify-api-v2
+      app: emojify-emojify
   template:
     metadata:
       labels:
-        app: emojify-api-v2
+        app: emojify-emojify
       annotations:
         "consul.hashicorp.com/connect-inject": "true"
-        "consul.hashicorp.com/connect-service-protocol": "http"
-        "consul.hashicorp.com/connect-service-upstreams": "emojify-emojify:8004,emojify-cache:8005"
+        "consul.hashicorp.com/connect-service-protocol": "grpc"
+        "consul.hashicorp.com/connect-service-upstreams": "emojify-facedetect:8003,emojify-cache:8004"
         "prometheus_io_scrape": "true"
     spec:
       containers:
-      - name: emojify-api-v2
-        image: "nicholasjackson/emojify-api:v2.0.0-beta.2"
+      - name: emojify-emojify
+        image: "nicholasjackson/emojify-emojify:v1.0.0-beta.2"
         imagePullPolicy: Always
         ports:
         - containerPort: 9090
         env:
-          - name: AUTHN_DISABLE
-            value: "true"
           - name: CACHE_ADDRESS
-            value: "localhost:8005"
-          - name: EMOJIFY_ADDRESS
             value: "localhost:8004"
+          - name: FACEBOX_ADDRESS
+            value: "http://localhost:8003"
           - name: STATSD_ADDRESS
             value: "localhost:9125"
           - name: BIND_ADDRESS
-            value: "127.0.0.1:9090"
+            value: "127.0.0.1"
+          - name: REDIS_ADDRESS
+            value: "127.0.0.1:6379"
+          - name: REDIS_PASSWORD
+            value: "password"
           - name: LOG_LEVEL
             value: "debug"
         resources:
@@ -45,6 +47,18 @@ spec:
           requests:
             cpu: 100m
             memory: 100Mi
+      
+      - name: redis
+        image: "redis:5.0.5-alpine3.9"
+        command: ["redis-server"]
+        args: ["--requirepass", "password"]
+        ports:
+          - name: redis
+            containerPort: 6379
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50Mi
 
       - name: prometheus-statsd
         image: "prom/statsd-exporter:latest"

@@ -98,6 +98,10 @@ spec:
           env:
             - name: GF_EXPLORE_ENABLED
               value: "true"
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "true"
+            - name: GF_AUTH_ORG_NAME
+              value: "Main Org."
           ports:
             - containerPort: 3000
               protocol: TCP
