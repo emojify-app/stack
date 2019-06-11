@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: emojify-emojify
-        image: "nicholasjackson/emojify-emojify:v1.0.0"
+        image: "nicholasjackson/emojify-emojify:v1.0.1"
         imagePullPolicy: Always
         ports:
         - containerPort: 9090
