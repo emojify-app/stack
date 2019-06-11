@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: emojify-traffic
-        image: "nicholasjackson/emojify-traffic:v0.3.0"
+        image: "nicholasjackson/emojify-traffic:v0.3.1"
         command: ["/emojify-traffic"]
         env:
         - name: USERS
