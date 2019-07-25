@@ -17,7 +17,7 @@ spec:
 apiVersion: getambassador.io/v1
 kind: Mapping
 metadata:
-  name: consul-api-mapping
+  name: consul-api-v2-mapping
   namespace: default
 spec:
   prefix: /v2/api/
@@ -28,6 +28,10 @@ spec:
   tls: ambassador-consul
   load_balancer:
     policy: round_robin
+  retry_policy: 
+    num_retries: 5
+    per_try_timeout: 2s
+    retry_on: 5xx
 
 ---
 apiVersion: getambassador.io/v1

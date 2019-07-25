@@ -1,0 +1,9 @@
+---
+apiVersion: getambassador.io/v1
+kind: TracingService
+metadata:
+  name: honeycomb-tracing
+  namespace: default
+spec:
+  service: honeycomb-opentracing-proxy:9411
+  driver: zipkin

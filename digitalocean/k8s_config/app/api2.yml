@@ -2,18 +2,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: emojify-api-v2
+  name: emojify-api-backup
   labels:
-    app: emojify-api-v2
+    app: emojify-api-backup
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: emojify-api-v2
+      app: emojify-api-backup
   template:
     metadata:
       labels:
-        app: emojify-api-v2
+        app: emojify-api-backup
       annotations:
         "consul.hashicorp.com/connect-inject": "true"
         "consul.hashicorp.com/connect-service-protocol": "http"
@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: emojify-api-v2
-        image: "nicholasjackson/emojify-api:v2.0.0-beta.11"
+        image: "nicholasjackson/emojify-api:v2.0.0-beta.8"
         imagePullPolicy: Always
         ports:
         - containerPort: 9090
@@ -39,6 +39,12 @@ spec:
             value: "127.0.0.1:9090"
           - name: LOG_LEVEL
             value: "debug"
+          - name: CACHE_ERROR_RATE
+            value: "1"
+          - name: CACHE_ERROR_DELAY
+            value: "3s"
+          - name: CACHE_ERROR_TYPE
+            value: "delay"
         resources:
           limits:
             cpu: 300m
