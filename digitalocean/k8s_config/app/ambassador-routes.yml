@@ -28,10 +28,11 @@ spec:
   tls: ambassador-consul
   load_balancer:
     policy: round_robin
-  retry_policy: 
-    num_retries: 5
-    per_try_timeout: 2s
-    retry_on: 5xx
+  timeout_ms: 4000
+  retry_policy:
+    retry_on: "5xx"
+    num_retries: 2
+    per_try_timeout: "2s" 
 
 ---
 apiVersion: getambassador.io/v1
